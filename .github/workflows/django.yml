@@ -1,4 +1,4 @@
-name: Django test
+name: Django Tests
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
   python-version: 3.12
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     env:
       POETRY_VERSION: "1.8.3"
