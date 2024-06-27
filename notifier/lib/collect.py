@@ -16,17 +16,17 @@ class Collector:
             os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     def run(self, search_query, last_datetime):
-        youtube_list = self.search(
+        youtube_list = self._search(
             search_query,
             last_datetime,
         )
-        stats_list = self.get_video_statistics(youtube_list["items"])
+        stats_list = self._get_video_statistics(youtube_list["items"])
 
-        return self.transform_data(youtube_list["items"], stats_list["items"])
+        return self._transform_data(youtube_list["items"], stats_list["items"])
 
-    def search(self, search_query: str, last_datetime: datetime = None) -> list:
+    def _search(self, search_query: str, last_datetime: datetime = None) -> list:
         if search_query in [None, ""]:
-            raise ValueError("Parameter search_query is none or empty")
+            raise ValueError("Parameter search_query cannot be none or empty")
 
         formatted_datetime_string = rfc3339(last_datetime) if last_datetime else None
 
@@ -43,7 +43,7 @@ class Collector:
 
         return response
 
-    def get_video_statistics(self, youtube_list: list):
+    def _get_video_statistics(self, youtube_list: list):
         ids = ",".join([video_data["id"]["videoId"] for video_data in youtube_list])
 
         request = self.youtube.videos().list(  # pylint: disable=E1101
@@ -54,7 +54,7 @@ class Collector:
 
         return response
 
-    def transform_data(self, youtube_list: list, youtube_stats_list: list) -> list:
+    def _transform_data(self, youtube_list: list, youtube_stats_list: list) -> list:
         data = {}
 
         for video_data in youtube_list:
@@ -64,7 +64,7 @@ class Collector:
                 data[video_data_id] = {"video": None, "stats": None}
 
             if data[video_data_id]["video"]:
-                raise ValueError("video has a value where there should be none")
+                raise ValueError("'video' has a value when it shouldn't have")
 
             data[video_data_id]["video"] = video_data
 
@@ -73,7 +73,7 @@ class Collector:
             stats_data_id = stats_data["id"]
 
             if data[stats_data_id]["stats"]:
-                raise ValueError("video has a value where there should be none")
+                raise ValueError("'stats' has a value when it shouldn't have")
 
             data[stats_data_id]["stats"] = stats_data
 
