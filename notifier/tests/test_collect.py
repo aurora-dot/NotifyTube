@@ -14,7 +14,7 @@ class CollectTestCase(TestCase):
     def test_get_newest_videos(self):
         collector = Collector()
         dt = datetime.now(UTC) - timedelta(days=1)
-        youtube_list = collector.search(
+        youtube_list = collector._search(
             search_query="test",
             last_datetime=dt,
         )
@@ -22,8 +22,8 @@ class CollectTestCase(TestCase):
         self.assertEqual(youtube_list["kind"], "youtube#searchListResponse")
         self.assertEqual(len(youtube_list["items"]), 50)
 
-        stats_list = collector.get_video_statistics(youtube_list["items"])
-        transformed_data = collector.transform_data(
+        stats_list = collector._get_video_statistics(youtube_list["items"])
+        transformed_data = collector._transform_data(
             youtube_list["items"], stats_list["items"]
         )
 
