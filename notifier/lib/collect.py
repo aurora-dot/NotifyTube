@@ -25,7 +25,7 @@ class Collector:
             part="snippet,id",
             maxResults=50,
             order="date",
-            q="surfing",
+            q=search_query,
             safeSearch="none",
             publishedAfter=formatted_datetime_string,
         )
