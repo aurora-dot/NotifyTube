@@ -9,6 +9,7 @@ on:
 env:
   node-version: 21
   python-version: 3.12
+  YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
 
 jobs:
   test:
@@ -61,7 +62,6 @@ jobs:
           poetry run python manage.py check --deploy --fail-level WARNING
         env:
           DEBUG: "False"
-          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       - name: Load cached npm packages
         id: cached-npm-dependencies
         uses: actions/cache@v2
@@ -90,7 +90,6 @@ jobs:
           poetry run coverage xml
         env:
           DEBUG: "True"
-          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v4.0.1
         with:
