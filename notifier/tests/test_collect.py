@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from django.test import TestCase
 
@@ -13,5 +13,18 @@ class CollectTestCase(TestCase):
 
     def test_get_newest_videos(self):
         collector = Collector()
-        out = collector.search(search_query="test", last_datetime=datetime.now())
-        print(out)
+        dt = datetime.now(UTC) - timedelta(days=1)
+        youtube_list = collector.search(
+            search_query="test",
+            last_datetime=dt,
+        )
+
+        self.assertEqual(youtube_list["kind"], "youtube#searchListResponse")
+        self.assertEqual(len(youtube_list["items"]), 50)
+
+        stats_list = collector.get_video_statistics(youtube_list["items"])
+        transformed_data = collector.transform_data(
+            youtube_list["items"], stats_list["items"]
+        )
+
+        print(transformed_data)
