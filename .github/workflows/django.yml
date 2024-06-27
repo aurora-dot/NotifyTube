@@ -89,6 +89,7 @@ jobs:
           poetry run coverage xml
         env:
           DEBUG: "True"
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v4.0.1
         with:
