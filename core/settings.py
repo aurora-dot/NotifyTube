@@ -40,6 +40,8 @@ SECRET_KEY = ENV("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = [ENV("SITENAME")]
 SENTRY_DSN = ENV("SENTRY_DSN")
 
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
 if not DEBUG and SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
