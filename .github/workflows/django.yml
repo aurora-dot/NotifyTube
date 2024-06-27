@@ -80,6 +80,7 @@ jobs:
         run: poetry run python manage.py migrate --no-input
         env:
           DEBUG: "False"
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       - name: Test using django
         run: |
           poetry run coverage erase
