@@ -15,6 +15,15 @@ class Collector:
         if settings.DEBUG:
             os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
+    def run(self, search_query, last_datetime):
+        youtube_list = self.search(
+            search_query,
+            last_datetime,
+        )
+        stats_list = self.get_video_statistics(youtube_list["items"])
+
+        return self.transform_data(youtube_list["items"], stats_list["items"])
+
     def search(self, search_query: str, last_datetime: datetime = None) -> list:
         if search_query in [None, ""]:
             raise ValueError("Parameter search_query is none or empty")
