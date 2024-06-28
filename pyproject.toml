@@ -13,6 +13,8 @@ django-environ = "^0.11.2"
 sentry-sdk = "^2.6.0"
 pylint = "^3.2.3"
 coverage = "^7.5.4"
+google-api-python-client = "^2.134.0"
+rfc3339 = "^6.2"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.7.1"

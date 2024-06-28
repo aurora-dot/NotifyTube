@@ -9,6 +9,7 @@ on:
 env:
   node-version: 21
   python-version: 3.12
+  YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
 
 jobs:
   test:
@@ -53,7 +54,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.cache/pre-commit
-          key: pre-commit|$PY|${{ hashFiles('.pre-commit-config.yaml') }}
+          key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Linting, formatting and file checks
         run: poetry run pre-commit run --all-files
       - name: Django Security Check
@@ -79,7 +80,7 @@ jobs:
       - name: Running migration
         run: poetry run python manage.py migrate --no-input
         env:
-          DEBUG: "False"
+          DEBUG: "True"
       - name: Test using django
         run: |
           poetry run coverage erase
