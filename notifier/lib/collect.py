@@ -2,34 +2,15 @@
 Collects YouTube video data.
 """
 
-import os
-from datetime import datetime
-
-import googleapiclient.discovery
-import googleapiclient.errors
-from django.conf import settings
-from rfc3339 import rfc3339
-
 
 class Collector:
     """
-    Collects YouTube video data from their API.
-
-    Attributes:
-        youtube: a Resource object to interact with Google YouTube API
+    Collects YouTube video data scraped from their webpage.
     """
 
-    def __init__(self) -> None:
-        self.youtube = googleapiclient.discovery.build(
-            "youtube", "v3", developerKey=settings.YOUTUBE_API_KEY
-        )
-        if settings.DEBUG:
-            os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-
-    def run(self, search_query, last_datetime):
+    def run(self, search_query: str, last_video_id: str) -> list:
         """
-        Collects video data given a search query and an datetime to collect
-        data from *after* the given datetime object
+        Collects video data given a search query and an previous
 
         Args:
             search_query: string, the query to be searched.
@@ -42,77 +23,13 @@ class Collector:
             ValueError: if the parameters to the function are none or an empty string
         """
 
-        youtube_list = self._search(
-            search_query,
-            last_datetime,
-        )
-        stats_list = self._get_video_statistics(youtube_list["items"])
+        pass
 
-        return self._transform_data(youtube_list["items"], stats_list["items"])
+    def get_initial_video_to_start_from(self, search_query) -> list[list, str]:
+        pass
 
-    def _search(self, search_query: str, last_datetime: datetime = None) -> list:
-        if search_query in [None, ""]:
-            raise ValueError("Parameter search_query cannot be none or empty")
-
-        if last_datetime is None:
-            raise ValueError("Parameter last_datetime cannot be none or empty")
-
-        request = self.youtube.search().list(  # pylint: disable=E1101
-            part="snippet,id",
-            maxResults=50,
-            order="date",
-            q=search_query,
-            safeSearch="none",
-            publishedAfter=rfc3339(last_datetime),
-        )
-
-        return request.execute()
-
-    def _get_video_statistics(self, youtube_list: list):
-        ids = ",".join([video_data["id"]["videoId"] for video_data in youtube_list])
-
-        request = self.youtube.videos().list(  # pylint: disable=E1101
-            part="id,statistics", id=ids
-        )
-
-        return request.execute()
+    def _search(self, search_query: str, last_video_id: str) -> list:
+        pass
 
     def _transform_data(self, youtube_list: list, youtube_stats_list: list) -> list:
-        data = {}
-
-        for video_data in youtube_list:
-            video_data_id = video_data["id"]["videoId"]
-
-            if video_data_id not in data:
-                data[video_data_id] = {"video": None, "stats": None}
-
-            if data[video_data_id]["video"]:
-                raise ValueError("'video' has a value when it shouldn't have")
-
-            data[video_data_id]["video"] = video_data
-
-        # very similar to loop above, could be turned into a function perhaps
-        # you could zip but it makes the code harder to read, just for the sake of
-        # saving 50 iterations
-        for stats_data in youtube_stats_list:
-            stats_data_id = stats_data["id"]
-
-            if data[stats_data_id]["stats"]:
-                raise ValueError("'stats' has a value when it shouldn't have")
-
-            data[stats_data_id]["stats"] = stats_data
-
-        return [
-            {
-                "video_id": video_data["video"]["id"]["videoId"],
-                "channel_title": video_data["video"]["snippet"]["channelTitle"],
-                "channel_id": video_data["video"]["snippet"]["channelId"],
-                "title": video_data["video"]["snippet"]["title"],
-                "thumbnail": video_data["video"]["snippet"]["thumbnails"]["high"][
-                    "url"
-                ],
-                "publish_time": video_data["video"]["snippet"]["publishedAt"],
-                "views": video_data["stats"]["statistics"]["viewCount"],
-            }
-            for video_data in data.values()
-        ]
+        pass
