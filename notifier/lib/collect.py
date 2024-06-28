@@ -46,9 +46,9 @@ class Collector:
             search_query,
             last_datetime,
         )
-        stats_list = self._get_video_statistics(youtube_list["items"])
+        stats_list = self._get_video_statistics(youtube_list)
 
-        return self._transform_data(youtube_list["items"], stats_list["items"])
+        return self._transform_data(youtube_list, stats_list["items"])
 
     def _search(self, search_query: str, last_datetime: datetime = None) -> list:
         if search_query in [None, ""]:
@@ -57,19 +57,42 @@ class Collector:
         if last_datetime is None:
             raise ValueError("Parameter last_datetime cannot be none or empty")
 
-        request = self.youtube.search().list(  # pylint: disable=E1101
-            part="snippet,id",
-            maxResults=50,
-            order="date",
-            q=search_query,
-            safeSearch="none",
-            publishedAfter=rfc3339(last_datetime),
-        )
+        data = []
+        next_page_token = None
+        initial_run = True
 
-        return request.execute()
+        while next_page_token or initial_run:
+            initial_run = False
+
+            request = self.youtube.search().list(  # pylint: disable=E1101
+                part="snippet,id",
+                maxResults=50,
+                order="date",
+                q=search_query,
+                safeSearch="none",
+                publishedAfter=rfc3339(last_datetime),
+                pageToken=next_page_token,
+            )
+
+            response = request.execute()
+            next_page_token = (
+                response["nextPageToken"] if "nextPageToken" in response else None
+            )
+
+            if response:
+                data.append(response)
+
+        return [video for video_data in data for video in video_data["items"]]
 
     def _get_video_statistics(self, youtube_list: list):
-        ids = ",".join([video_data["id"]["videoId"] for video_data in youtube_list])
+        print(len(youtube_list))
+
+        ids_list = [
+            ",".join(
+                [video_data["id"]["videoId"] for video_data in youtube_list[i : i + 50]]
+            )
+            for i in range(0, len(youtube_list), 50)
+        ]
 
         request = self.youtube.videos().list(  # pylint: disable=E1101
             part="id,statistics", id=ids

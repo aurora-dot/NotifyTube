@@ -12,7 +12,7 @@ class CollectTestCase(TestCase):
 
     def setUp(self) -> None:
         self.collector = Collector()
-        self.dt = datetime.now(UTC) - timedelta(days=1)
+        self.dt = datetime.now(UTC) - timedelta(hours=1)
 
     def test_get_newest_videos_functions(self):
         """Testing each individual function of Collector to see if each stage works."""
@@ -22,14 +22,12 @@ class CollectTestCase(TestCase):
             last_datetime=self.dt,
         )
 
-        self.assertEqual(youtube_list["kind"], "youtube#searchListResponse")
-        self.assertEqual(len(youtube_list["items"]), 50)
-
-        self.assertIn("videoId", youtube_list["items"][0]["id"])
-        self.assertIn("channelTitle", youtube_list["items"][0]["snippet"])
+        self.assertGreaterEqual(len(youtube_list), 50)
+        self.assertIn("videoId", youtube_list[0]["id"])
+        self.assertIn("channelTitle", youtube_list[0]["snippet"])
 
         stats_list = self.collector._get_video_statistics(  # pylint: disable=W0212
-            youtube_list["items"]
+            youtube_list
         )
 
         self.assertEqual(stats_list["kind"], "youtube#videoListResponse")
