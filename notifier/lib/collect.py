@@ -1,3 +1,7 @@
+"""
+Collects YouTube video data.
+"""
+
 import os
 from datetime import datetime
 
@@ -8,6 +12,13 @@ from rfc3339 import rfc3339
 
 
 class Collector:
+    """
+    Collects YouTube video data from their API.
+
+    Attributes:
+        youtube: a Resource object to interact with Google YouTube API
+    """
+
     def __init__(self) -> None:
         self.youtube = googleapiclient.discovery.build(
             "youtube", "v3", developerKey=settings.YOUTUBE_API_KEY
@@ -16,6 +27,21 @@ class Collector:
             os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     def run(self, search_query, last_datetime):
+        """
+        Collects video data given a search query and an datetime to collect
+        data from *after* the given datetime object
+
+        Args:
+            search_query: string, the query to be searched.
+            last_datetime: datetime, the datetime to collect data after.
+
+        Returns:
+            A list of dictionaries which contain data about the latest vidros.
+
+        Raises:
+            ValueError: if the parameters to the function are none or an empty string
+        """
+
         youtube_list = self._search(
             search_query,
             last_datetime,
@@ -28,7 +54,8 @@ class Collector:
         if search_query in [None, ""]:
             raise ValueError("Parameter search_query cannot be none or empty")
 
-        formatted_datetime_string = rfc3339(last_datetime) if last_datetime else None
+        if last_datetime is None:
+            raise ValueError("Parameter last_datetime cannot be none or empty")
 
         request = self.youtube.search().list(  # pylint: disable=E1101
             part="snippet,id",
@@ -36,12 +63,10 @@ class Collector:
             order="date",
             q=search_query,
             safeSearch="none",
-            publishedAfter=formatted_datetime_string,
+            publishedAfter=rfc3339(last_datetime),
         )
 
-        response = request.execute()
-
-        return response
+        return request.execute()
 
     def _get_video_statistics(self, youtube_list: list):
         ids = ",".join([video_data["id"]["videoId"] for video_data in youtube_list])
@@ -50,9 +75,7 @@ class Collector:
             part="id,statistics", id=ids
         )
 
-        response = request.execute()
-
-        return response
+        return request.execute()
 
     def _transform_data(self, youtube_list: list, youtube_stats_list: list) -> list:
         data = {}
@@ -69,6 +92,8 @@ class Collector:
             data[video_data_id]["video"] = video_data
 
         # very similar to loop above, could be turned into a function perhaps
+        # you could zip but it makes the code harder to read, just for the sake of
+        # saving 50 iterations
         for stats_data in youtube_stats_list:
             stats_data_id = stats_data["id"]
 
