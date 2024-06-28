@@ -85,8 +85,6 @@ class Collector:
         return [video for video_data in data for video in video_data["items"]]
 
     def _get_video_statistics(self, youtube_list: list):
-        print(len(youtube_list))
-
         ids_list = [
             ",".join(
                 [video_data["id"]["videoId"] for video_data in youtube_list[i : i + 50]]
@@ -94,11 +92,15 @@ class Collector:
             for i in range(0, len(youtube_list), 50)
         ]
 
-        request = self.youtube.videos().list(  # pylint: disable=E1101
-            part="id,statistics", id=ids
-        )
+        data = []
+        for ids in ids_list:
+            request = self.youtube.videos().list(  # pylint: disable=E1101
+                part="id,statistics", id=ids
+            )
 
-        return request.execute()
+            data.append(request.execute())
+
+        return [stats for stats_data in data for stats in stats_data["items"]]
 
     def _transform_data(self, youtube_list: list, youtube_stats_list: list) -> list:
         data = {}
