@@ -162,3 +162,5 @@ cython_debug/
 
 node_modules/
 static/css/style.css
+
+page.html
