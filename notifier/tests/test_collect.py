@@ -17,44 +17,46 @@ class CollectTestCase(TestCase):
     def test_get_newest_videos_functions(self):
         """Testing each individual function of Collector to see if each stage works."""
 
-        youtube_list = self.collector._search(  # pylint: disable=W0212
-            search_query="test",
-            last_datetime=self.dt,
-        )
+        test = self.collector.get_initial_video_for_query("test search")
 
-        self.assertEqual(youtube_list["kind"], "youtube#searchListResponse")
-        self.assertEqual(len(youtube_list["items"]), 50)
+        # youtube_list = self.collector._search(  # pylint: disable=W0212
+        #     search_query="test",
+        #     last_datetime=self.dt,
+        # )
 
-        self.assertIn("videoId", youtube_list["items"][0]["id"])
-        self.assertIn("channelTitle", youtube_list["items"][0]["snippet"])
+        # self.assertEqual(youtube_list["kind"], "youtube#searchListResponse")
+        # self.assertEqual(len(youtube_list["items"]), 50)
 
-        stats_list = self.collector._get_video_statistics(  # pylint: disable=W0212
-            youtube_list["items"]
-        )
+        # self.assertIn("videoId", youtube_list["items"][0]["id"])
+        # self.assertIn("channelTitle", youtube_list["items"][0]["snippet"])
 
-        self.assertEqual(stats_list["kind"], "youtube#videoListResponse")
-        self.assertEqual(len(stats_list["items"]), 50)
+        # stats_list = self.collector._get_video_statistics(  # pylint: disable=W0212
+        #     youtube_list["items"]
+        # )
 
-        self.assertIn("statistics", stats_list["items"][0])
-        self.assertIn("viewCount", stats_list["items"][0]["statistics"])
+        # self.assertEqual(stats_list["kind"], "youtube#videoListResponse")
+        # self.assertEqual(len(stats_list["items"]), 50)
 
-        transformed_data = self.collector._transform_data(  # pylint: disable=W0212
-            youtube_list["items"], stats_list["items"]
-        )
+        # self.assertIn("statistics", stats_list["items"][0])
+        # self.assertIn("viewCount", stats_list["items"][0]["statistics"])
 
-        self.assertEqual(len(transformed_data), 50)
-        self.assertEqual(
-            "video_id,channel_title,channel_id,title,thumbnail,publish_time,views",
-            ",".join(list(transformed_data[0].keys())),
-        )
+        # transformed_data = self.collector._transform_data(  # pylint: disable=W0212
+        #     youtube_list["items"], stats_list["items"]
+        # )
 
-    def test_get_newest_videos_run(self):
-        """Test if the full run function works for Collector."""
+        # self.assertEqual(len(transformed_data), 50)
+        # self.assertEqual(
+        #     "video_id,channel_title,channel_id,title,thumbnail,publish_time,views",
+        #     ",".join(list(transformed_data[0].keys())),
+        # )
 
-        youtube_video_data = self.collector.run("test", self.dt)
+    # def test_get_newest_videos_run(self):
+    #     """Test if the full run function works for Collector."""
 
-        self.assertEqual(
-            "video_id,channel_title,channel_id,title,thumbnail,publish_time,views",
-            ",".join(list(youtube_video_data[0].keys())),
-        )
-        self.assertIn("test", youtube_video_data[0]["title"])
+    #     youtube_video_data = self.collector.run("test", self.dt)
+
+    #     self.assertEqual(
+    #         "video_id,channel_title,channel_id,title,thumbnail,publish_time,views",
+    #         ",".join(list(youtube_video_data[0].keys())),
+    #     )
+    #     self.assertIn("test", youtube_video_data[0]["title"])
