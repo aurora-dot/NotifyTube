@@ -3,6 +3,7 @@ Collects YouTube video data.
 """
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -58,7 +59,7 @@ class Collector:
     def _search_and_scroll(self, search_query: str, last_video_id: str) -> WebDriver:
         browser = self._goto_query_page(search_query)
 
-        for _ in range(60):
+        for _ in range(120):
             # currently jank just to get it working,
             # scrolling to body position doesn't work
             browser.execute_script(
@@ -76,6 +77,13 @@ class Collector:
             ):
                 raise LookupError("Could not find last video id from query")
 
+        if not self._element_exists(
+            browser, f'//a[contains(@href ,"{last_video_id}")]'
+        ):
+            raise LookupError(
+                "Could not find last video id from query after all iterations"
+            )
+
         if settings.DEBUG:
             with open("page.html", "w", encoding="utf-8") as file:
                 file.write(browser.page_source)
@@ -85,7 +93,11 @@ class Collector:
     def _get_newest_videos_data(self, search_query: str, last_video_id: str):
         browser = self._search_and_scroll(search_query, last_video_id)
         videos = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
-        return [self.extractor.extract(video) for video in videos]
+
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(self.extractor.extract, videos))
+
+        return results
 
     @staticmethod
     def _element_exists(browser: WebDriver, xpath_string: str):
@@ -113,15 +125,5 @@ class Collector:
     def _setup_browser() -> WebDriver:
         chrome_options = Options()
         # chrome_options.add_argument("--headless=true")
-        # chrome_options.add_argument("--window-size=1920x1080")
-        # chrome_options.add_argument("--no-sandbox")
-        # chrome_options.add_argument("--disable-setuid-sandbox")
-        # chrome_options.add_argument("--disable-dev-shm-usage")
-        # chrome_options.add_argument("--disable-gpu")
-        # chrome_options.add_argument("--disable-dev-tools")
-        # chrome_options.add_argument("--no-zygote")
-        # chrome_options.add_argument("--single-process")
-        # chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data")
-        # chrome_options.add_argument("--remote-debugging-port=9222")
 
         return Chrome(options=chrome_options)
