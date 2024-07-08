@@ -21,6 +21,10 @@ from notifier.lib.metadata_extractor import MetadataExtractor
 class Collector:
     """
     Collects YouTube video data scraped from their webpage.
+
+    Attributes:
+        youtube_video_tag: the tag which videos on youtube use
+        extractor: to extract the metadata from individual youtube video elements
     """
 
     youtube_video_tag = "ytd-video-renderer"
@@ -28,21 +32,43 @@ class Collector:
 
     def run(self, search_query: str, last_video_id: str) -> list:
         """
-        Collects video data given a search query and an previous
+        Collects video data given a search query and an previous video id to stop at
 
         Args:
             search_query: string, the query to be searched.
-            last_datetime: datetime, the datetime to collect data after.
+            last_video_id: string, the last video id which was captured.
 
         Returns:
-            A list of dictionaries which contain data about the latest vidros.
+            A list of dictionaries which contain data about the latest videos.
 
         Raises:
             ValueError: if the parameters to the function are none or an empty string
+            LookupError: if the function cannot find the previous video `last_video_id`
+            NoSuchElementException: if no element is found
+                e.g. no videos under search query
         """
+        if not search_query or search_query == "":
+            raise ValueError("Nothing in search_query parameter")
+        if not last_video_id or last_video_id == "":
+            raise ValueError("Nothing in last_video_id parameter")
+
         return self._get_newest_videos_data(search_query, last_video_id)
 
     def get_initial_video_for_query(self, search_query) -> list[list, str]:
+        """
+        Collects the first video data given a search query
+
+        Args:
+            search_query: string, the query to be searched.
+
+        Returns:
+            A dictionary which contain data about the latest video.
+
+        Raises:
+            ValueError: if the parameters to the function are none or an empty string
+            NoSuchElementException: if no element is found
+                e.g. no videos under search query
+        """
         browser = self._goto_query_page(search_query)
         first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
         return self.extractor.extract(first_video)
@@ -124,6 +150,6 @@ class Collector:
     @staticmethod
     def _setup_browser() -> WebDriver:
         chrome_options = Options()
-        # chrome_options.add_argument("--headless=true")
+        chrome_options.add_argument("--headless=true")
 
         return Chrome(options=chrome_options)

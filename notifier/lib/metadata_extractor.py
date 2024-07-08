@@ -1,9 +1,24 @@
+"""
+Extracts data from youtube video elements
+"""
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 
 class MetadataExtractor:
+    """
+    Extracts data from youtube video elements for storage of mass data
+    """
+
     def extract(self, video_element: WebElement):
+        """
+        Extracts data from youtube element and returns a dictonary of
+        data
+
+        Args:
+            video_element: WebElement, for extraction of youtube video data
+        """
         return (
             self._get_link_data(video_element)
             | self._get_title_and_thumbnail(video_element)
