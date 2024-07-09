@@ -63,7 +63,7 @@ class MetadataExtractor:
         channel_name_element = video_element.find_element(
             By.ID, "channel-name"
         ).find_element(By.TAG_NAME, "a")
-        channel_name = channel_name_element.text
+        channel_name = channel_name_element.get_property("innerText")
         channel_link = channel_name_element.get_attribute("href")
 
         return {
