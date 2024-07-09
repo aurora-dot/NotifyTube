@@ -67,7 +67,7 @@ class MetadataExtractor:
         channel_link = channel_name_element.get_attribute("href")
 
         return {
-            "channel_img": channel_img,
             "channel_name": channel_name,
             "channel_link": channel_link,
+            "channel_img": channel_img,
         }
