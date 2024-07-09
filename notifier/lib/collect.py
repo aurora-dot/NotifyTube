@@ -3,7 +3,6 @@ Collects YouTube video data.
 """
 
 import time
-from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -71,7 +70,7 @@ class Collector:
         """
         browser = self._goto_query_page(search_query)
         first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
-        return self.extractor.extract(first_video)
+        return self.extractor.extract(first_video, browser)
 
     def _goto_query_page(self, search_query):
         browser = self._setup_browser()
@@ -110,6 +109,8 @@ class Collector:
                 "Could not find last video id from query after all iterations"
             )
 
+        time.sleep(0.25)
+
         if settings.DEBUG:
             with open("page.html", "w", encoding="utf-8") as file:
                 file.write(browser.page_source)
@@ -119,11 +120,7 @@ class Collector:
     def _get_newest_videos_data(self, search_query: str, last_video_id: str):
         browser = self._search_and_scroll(search_query, last_video_id)
         videos = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
-
-        with ThreadPoolExecutor() as executor:
-            results = list(executor.map(self.extractor.extract, videos))
-
-        return results
+        return [self.extractor.extract(video, browser) for video in videos]
 
     @staticmethod
     def _element_exists(browser: WebDriver, xpath_string: str):
@@ -150,6 +147,6 @@ class Collector:
     @staticmethod
     def _setup_browser() -> WebDriver:
         chrome_options = Options()
-        chrome_options.add_argument("--headless=true")
+        # chrome_options.add_argument("--headless=true")
 
         return Chrome(options=chrome_options)
