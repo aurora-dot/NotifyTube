@@ -56,7 +56,7 @@ class MetadataExtractor:
         if url_prefix in video_id:
             raise ValueError("video_id still contains url prefix")
 
-        return {"link": cleaned_link, "video_id": video_id}
+        return {"video_id": video_id, "link": cleaned_link}
 
     def _get_channel_data(self, video_element):
         channel_img = video_element.find_element(By.ID, "img").get_attribute("src")
