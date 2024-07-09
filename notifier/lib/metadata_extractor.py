@@ -2,8 +2,6 @@
 Extracts data from youtube video elements
 """
 
-from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -13,7 +11,7 @@ class MetadataExtractor:
     Extracts data from youtube video elements for storage of mass data
     """
 
-    def extract(self, video_element: WebElement, browser: WebDriver):
+    def extract(self, video_element: WebElement):
         """
         Extracts data from youtube element and returns a dictonary of
         data
@@ -21,8 +19,6 @@ class MetadataExtractor:
         Args:
             video_element: WebElement, for extraction of youtube video data
         """
-        actions = ActionChains(browser)
-        actions.move_to_element(video_element).perform()
 
         return (
             self._get_link_data(video_element)

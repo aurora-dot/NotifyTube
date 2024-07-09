@@ -27,6 +27,7 @@ class Collector:
 
     youtube_video_tag = "ytd-video-renderer"
     extractor = MetadataExtractor()
+    url_parameter_for_ordering_by_latest = "sp=CAI%253D"
 
     def get_latest_videos(self, search_query: str, last_video_id: str) -> list[dict]:
         """
@@ -72,12 +73,12 @@ class Collector:
 
         browser = self._goto_query_page(search_query)
         first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
-        return self.extractor.extract(first_video, browser)
+        return self.extractor.extract(first_video)
 
     def _goto_query_page(self, search_query: str) -> WebDriver:
         browser = self._setup_browser()
         browser.get(
-            f"https://www.youtube.com/results?search_query={quote_plus(search_query)}&sp=CAI%253D"  # pylint: disable=C0301
+            f"https://www.youtube.com/results?search_query={quote_plus(search_query)}&{self.url_parameter_for_ordering_by_latest}"  # pylint: disable=C0301
         )
         self._close_cookie_popup(browser)
 
@@ -98,9 +99,8 @@ class Collector:
             for i in range(x, len(video_elements)):
                 if not last_video_not_existing:
                     break
-                actions = ActionChains(browser)
-                actions.move_to_element(video_elements[i]).perform()
-                videos.append(self.extractor.extract(video_elements[i], browser))
+                ActionChains(browser).move_to_element(video_elements[i]).perform()
+                videos.append(self.extractor.extract(video_elements[i]))
 
             if self._element_exists(
                 browser, '//yt-formatted-string[contains(text(), "No more results")]'
@@ -124,7 +124,7 @@ class Collector:
 
     @staticmethod
     def _close_cookie_popup(browser: WebDriver):
-        cookie_decline_xpath = '//*[@id="content"]/div[2]/div[6]/div[1]/ytd-button-renderer[1]/yt-button-shape/button'  # pylint: disable=C0301
+        cookie_decline_xpath = '//span[contains(text(), "Reject all")]'
 
         try:
             WebDriverWait(browser, 25).until(
@@ -134,7 +134,9 @@ class Collector:
             browser.quit()
             raise error
 
-        browser.find_element(By.XPATH, cookie_decline_xpath).click()
+        ActionChains(browser).click(
+            browser.find_element(By.XPATH, cookie_decline_xpath)
+        ).perform()
 
     @staticmethod
     def _setup_browser() -> WebDriver:
