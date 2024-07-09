@@ -2,14 +2,13 @@
 Collects YouTube video data.
 """
 
-import time
 from urllib.parse import quote_plus
 
-from django.conf import settings
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
@@ -29,7 +28,7 @@ class Collector:
     youtube_video_tag = "ytd-video-renderer"
     extractor = MetadataExtractor()
 
-    def run(self, search_query: str, last_video_id: str) -> list:
+    def get_latest_videos(self, search_query: str, last_video_id: str) -> list:
         """
         Collects video data given a search query and an previous video id to stop at
 
@@ -51,7 +50,7 @@ class Collector:
         if not last_video_id or last_video_id == "":
             raise ValueError("Nothing in last_video_id parameter")
 
-        return self._get_newest_videos_data(search_query, last_video_id)
+        return self._search_scroll_extract(search_query, last_video_id)
 
     def get_initial_video_for_query(self, search_query) -> list[list, str]:
         """
@@ -68,6 +67,9 @@ class Collector:
             NoSuchElementException: if no element is found
                 e.g. no videos under search query
         """
+        if not search_query or search_query == "":
+            raise ValueError("Nothing in search_query parameter")
+
         browser = self._goto_query_page(search_query)
         first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
         return self.extractor.extract(first_video, browser)
@@ -81,46 +83,36 @@ class Collector:
 
         return browser
 
-    def _search_and_scroll(self, search_query: str, last_video_id: str) -> WebDriver:
+    def _search_scroll_extract(
+        self, search_query: str, last_video_id: str
+    ) -> WebDriver:
         browser = self._goto_query_page(search_query)
 
-        for _ in range(120):
-            # currently jank just to get it working,
-            # scrolling to body position doesn't work
-            browser.execute_script(
-                "window.scrollTo(0, 99999999999999999999999999999999)"
-            )
-            time.sleep(0.5)
+        x = 0
+        videos = []
 
-            if self._element_exists(
-                browser, f'//a[contains(@href ,"{last_video_id}")]'
-            ):
-                break
+        while last_video_not_existing := not self._element_exists(
+            browser, f'//a[contains(@href ,"{last_video_id}")]'
+        ):
+            video_elements = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
+            for i in range(x, len(video_elements)):
+                if not last_video_not_existing:
+                    break
+                actions = ActionChains(browser)
+                actions.move_to_element(video_elements[i]).perform()
+                videos.append(self.extractor.extract(video_elements[i], browser))
 
             if self._element_exists(
                 browser, '//yt-formatted-string[contains(text(), "No more results")]'
             ):
                 raise LookupError("Could not find last video id from query")
 
-        if not self._element_exists(
-            browser, f'//a[contains(@href ,"{last_video_id}")]'
-        ):
-            raise LookupError(
-                "Could not find last video id from query after all iterations"
+            x = len(video_elements)
+            browser.execute_script(
+                "window.scrollTo(0, 99999999999999999999999999999999)"
             )
 
-        time.sleep(0.25)
-
-        if settings.DEBUG:
-            with open("page.html", "w", encoding="utf-8") as file:
-                file.write(browser.page_source)
-
-        return browser
-
-    def _get_newest_videos_data(self, search_query: str, last_video_id: str):
-        browser = self._search_and_scroll(search_query, last_video_id)
-        videos = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
-        return [self.extractor.extract(video, browser) for video in videos]
+        return videos
 
     @staticmethod
     def _element_exists(browser: WebDriver, xpath_string: str):
