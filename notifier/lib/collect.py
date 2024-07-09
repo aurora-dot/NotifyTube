@@ -28,7 +28,7 @@ class Collector:
     youtube_video_tag = "ytd-video-renderer"
     extractor = MetadataExtractor()
 
-    def get_latest_videos(self, search_query: str, last_video_id: str) -> list:
+    def get_latest_videos(self, search_query: str, last_video_id: str) -> list[dict]:
         """
         Collects video data given a search query and an previous video id to stop at
 
@@ -52,7 +52,7 @@ class Collector:
 
         return self._search_scroll_extract(search_query, last_video_id)
 
-    def get_initial_video_for_query(self, search_query) -> list[list, str]:
+    def get_initial_video_for_query(self, search_query: str) -> dict:
         """
         Collects the first video data given a search query
 
@@ -74,7 +74,7 @@ class Collector:
         first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
         return self.extractor.extract(first_video, browser)
 
-    def _goto_query_page(self, search_query):
+    def _goto_query_page(self, search_query: str) -> WebDriver:
         browser = self._setup_browser()
         browser.get(
             f"https://www.youtube.com/results?search_query={quote_plus(search_query)}&sp=CAI%253D"  # pylint: disable=C0301
@@ -85,7 +85,7 @@ class Collector:
 
     def _search_scroll_extract(
         self, search_query: str, last_video_id: str
-    ) -> WebDriver:
+    ) -> list[dict]:
         browser = self._goto_query_page(search_query)
 
         x = 0
@@ -115,7 +115,7 @@ class Collector:
         return videos
 
     @staticmethod
-    def _element_exists(browser: WebDriver, xpath_string: str):
+    def _element_exists(browser: WebDriver, xpath_string: str) -> bool:
         try:
             browser.find_element(By.XPATH, xpath_string)
         except NoSuchElementException:
