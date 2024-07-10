@@ -20,11 +20,11 @@ class MetadataExtractor:
             video_element: WebElement, for extraction of youtube video data
         """
 
-        return (
-            self._get_link_data(video_element)
-            | self._get_title_and_thumbnail(video_element)
-            | self._get_channel_data(video_element)
-        )
+        return {
+            "video": self._get_link_data(video_element)
+            | self._get_title_and_thumbnail(video_element),
+            "channel": self._get_channel_data(video_element),
+        }
 
     def _get_title_and_thumbnail(self, video_element):
         title = (
@@ -63,7 +63,7 @@ class MetadataExtractor:
         channel_link = channel_name_element.get_attribute("href")
 
         return {
-            "channel_name": channel_name,
             "channel_link": channel_link,
+            "channel_name": channel_name,
             "channel_img": channel_img,
         }

@@ -20,14 +20,14 @@ class CollectTestCase(StaticLiveServerTestCase):
     @staticmethod
     def _remove_inconsistencies(data):
         for d in data:
-            if d["thumbnail"] is not None:
-                d["thumbnail"] = "/" + re.sub(
-                    r"http:\/\/localhost:\d*?\/", "", d["thumbnail"]
+            if d["video"]["thumbnail"] is not None:
+                d["video"]["thumbnail"] = "/" + re.sub(
+                    r"http:\/\/localhost:\d*?\/", "", d["video"]["thumbnail"]
                 )
 
-            if d["channel_img"] is not None:
-                d["channel_img"] = "/" + re.sub(
-                    r"http:\/\/localhost:\d*?\/", "", d["channel_img"]
+            if d["channel"]["channel_img"] is not None:
+                d["channel"]["channel_img"] = "/" + re.sub(
+                    r"http:\/\/localhost:\d*?\/", "", d["channel"]["channel_img"]
                 )
 
         return data
