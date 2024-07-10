@@ -57,6 +57,12 @@ jobs:
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Prepare Selenium
         uses: nanasess/setup-chromedriver@v2.2.2
+        with:
+          chromedriver-version: "126.0.6478.126"
+      - name: Setup Display
+        run: |
+          export DISPLAY=:99
+          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
       - name: Linting, formatting and file checks
         run: poetry run pre-commit run --all-files
       - name: Django Security Check
