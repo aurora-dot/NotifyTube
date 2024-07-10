@@ -99,7 +99,7 @@ class Collector:
             for i in range(loop_start, len(video_elements)):
                 ActionChains(browser).move_to_element(video_elements[i]).perform()
                 extracted = self.extractor.extract(video_elements[i])
-                if extracted["video_id"] == last_video_id:
+                if extracted["video"]["video_id"] == last_video_id:
                     break
                 videos.append(extracted)
 
