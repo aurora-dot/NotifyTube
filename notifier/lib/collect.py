@@ -89,10 +89,12 @@ class Collector:
     ) -> list[dict]:
         browser = self._goto_query_page(search_query)
 
+        max_scrolls = 120
         loop_start = 0
+        current_scrolls = 0
         videos = []
 
-        while True:
+        while current_scrolls <= max_scrolls:
             video_elements = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
             for i in range(loop_start, len(video_elements)):
                 ActionChains(browser).move_to_element(video_elements[i]).perform()
@@ -117,6 +119,17 @@ class Collector:
             browser.execute_script(
                 "window.scrollTo(0, 99999999999999999999999999999999)"
             )
+
+            current_scrolls += 1
+
+        # latter half of bool statement is just in case on the last scroll it is found
+        if current_scrolls >= max_scrolls and not self._element_exists(
+            browser, f'//a[contains(@href ,"{last_video_id}")]'
+        ):
+            raise LookupError(
+                f"Could not find the previous video in {current_scrolls} page scrolls"
+            )
+
         return videos
 
     @staticmethod
