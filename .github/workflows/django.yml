@@ -55,6 +55,8 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Prepare Selenium
+        uses: nanasess/setup-chromedriver@v2.2.2
       - name: Linting, formatting and file checks
         run: poetry run pre-commit run --all-files
       - name: Django Security Check
