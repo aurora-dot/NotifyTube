@@ -63,6 +63,7 @@ if not DEBUG and SENTRY_DSN:
 # Application definition
 
 INSTALLED_APPS = [
+    "notifier",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -2,117 +2,160 @@
 Collects YouTube video data.
 """
 
-import os
-from datetime import datetime
+from urllib.parse import quote_plus
 
-import googleapiclient.discovery
-import googleapiclient.errors
-from django.conf import settings
-from rfc3339 import rfc3339
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver import Chrome
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
+
+from notifier.lib.metadata_extractor import MetadataExtractor
 
 
 class Collector:
     """
-    Collects YouTube video data from their API.
+    Collects YouTube video data scraped from their webpage.
 
     Attributes:
-        youtube: a Resource object to interact with Google YouTube API
+        youtube_video_tag: the tag which videos on youtube use
+        extractor: to extract the metadata from individual youtube video elements
     """
 
-    def __init__(self) -> None:
-        self.youtube = googleapiclient.discovery.build(
-            "youtube", "v3", developerKey=settings.YOUTUBE_API_KEY
-        )
-        if settings.DEBUG:
-            os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+    youtube_video_tag = "ytd-video-renderer"
+    extractor = MetadataExtractor()
+    url_parameter_for_ordering_by_latest = "sp=CAI%253D"
 
-    def run(self, search_query, last_datetime):
+    def get_latest_videos(self, search_query: str, last_video_id: str) -> list[dict]:
         """
-        Collects video data given a search query and an datetime to collect
-        data from *after* the given datetime object
+        Collects video data given a search query and an previous video id to stop at
 
         Args:
             search_query: string, the query to be searched.
-            last_datetime: datetime, the datetime to collect data after.
+            last_video_id: string, the last video id which was captured.
 
         Returns:
-            A list of dictionaries which contain data about the latest vidros.
+            A list of dictionaries which contain data about the latest videos.
 
         Raises:
             ValueError: if the parameters to the function are none or an empty string
+            LookupError: if the function cannot find the previous video `last_video_id`
+            NoSuchElementException: if no element is found
+                e.g. no videos under search query
         """
+        if not search_query or search_query == "":
+            raise ValueError("Nothing in search_query parameter")
+        if not last_video_id or last_video_id == "":
+            raise ValueError("Nothing in last_video_id parameter")
 
-        youtube_list = self._search(
-            search_query,
-            last_datetime,
+        return self._search_scroll_extract(search_query, last_video_id)
+
+    def get_initial_video_for_query(self, search_query: str) -> dict:
+        """
+        Collects the first video data given a search query
+
+        Args:
+            search_query: string, the query to be searched.
+
+        Returns:
+            A dictionary which contain data about the latest video.
+
+        Raises:
+            ValueError: if the parameters to the function are none or an empty string
+            NoSuchElementException: if no element is found
+                e.g. no videos under search query
+        """
+        if not search_query or search_query == "":
+            raise ValueError("Nothing in search_query parameter")
+
+        browser = self._goto_query_page(search_query)
+        first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
+        return self.extractor.extract(first_video)
+
+    def _goto_query_page(self, search_query: str) -> WebDriver:
+        browser = self._setup_browser()
+        browser.get(
+            f"https://www.youtube.com/results?search_query={quote_plus(search_query)}&{self.url_parameter_for_ordering_by_latest}"  # pylint: disable=C0301
         )
-        stats_list = self._get_video_statistics(youtube_list["items"])
+        self._close_cookie_popup(browser)
 
-        return self._transform_data(youtube_list["items"], stats_list["items"])
+        return browser
 
-    def _search(self, search_query: str, last_datetime: datetime = None) -> list:
-        if search_query in [None, ""]:
-            raise ValueError("Parameter search_query cannot be none or empty")
+    def _search_scroll_extract(
+        self, search_query: str, last_video_id: str
+    ) -> list[dict]:
+        browser = self._goto_query_page(search_query)
 
-        if last_datetime is None:
-            raise ValueError("Parameter last_datetime cannot be none or empty")
+        loop_start = 0
+        videos = []
 
-        request = self.youtube.search().list(  # pylint: disable=E1101
-            part="snippet,id",
-            maxResults=50,
-            order="date",
-            q=search_query,
-            safeSearch="none",
-            publishedAfter=rfc3339(last_datetime),
-        )
+        while True:
+            video_elements = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
+            for i in range(loop_start, len(video_elements)):
+                ActionChains(browser).move_to_element(video_elements[i]).perform()
+                extracted = self.extractor.extract(video_elements[i])
+                if extracted["video_id"] == last_video_id:
+                    break
+                videos.append(extracted)
 
-        return request.execute()
+            if self._element_exists(
+                browser, '//yt-formatted-string[contains(text(), "No more results")]'
+            ):
+                raise LookupError("Could not find last video id from query")
 
-    def _get_video_statistics(self, youtube_list: list):
-        ids = ",".join([video_data["id"]["videoId"] for video_data in youtube_list])
+            if self._element_exists(
+                browser, f'//a[contains(@href ,"{last_video_id}")]'
+            ):
+                break
 
-        request = self.youtube.videos().list(  # pylint: disable=E1101
-            part="id,statistics", id=ids
-        )
+            loop_start = len(video_elements)
 
-        return request.execute()
+            # Scroll to bottom to trigger new reload
+            browser.execute_script(
+                "window.scrollTo(0, 99999999999999999999999999999999)"
+            )
+        return videos
 
-    def _transform_data(self, youtube_list: list, youtube_stats_list: list) -> list:
-        data = {}
+    @staticmethod
+    def _element_exists(browser: WebDriver, xpath_string: str) -> bool:
+        try:
+            browser.find_element(By.XPATH, xpath_string)
+        except NoSuchElementException:
+            return False
+        return True
 
-        for video_data in youtube_list:
-            video_data_id = video_data["id"]["videoId"]
+    @staticmethod
+    def _close_cookie_popup(browser: WebDriver):
+        cookie_decline_xpath = '//span[contains(text(), "Reject all")]'
 
-            if video_data_id not in data:
-                data[video_data_id] = {"video": None, "stats": None}
+        try:
+            WebDriverWait(browser, 25).until(
+                EC.presence_of_element_located((By.XPATH, cookie_decline_xpath))
+            )
+        except TimeoutException as error:
+            browser.quit()
+            raise error
 
-            if data[video_data_id]["video"]:
-                raise ValueError("'video' has a value when it shouldn't have")
+        ActionChains(browser).click(
+            browser.find_element(By.XPATH, cookie_decline_xpath)
+        ).perform()
 
-            data[video_data_id]["video"] = video_data
+    @staticmethod
+    def _setup_browser() -> WebDriver:
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=true")
+        # chrome_options.add_argument("--window-size=1920x1080")
+        # chrome_options.add_argument("--no-sandbox")
+        # chrome_options.add_argument("--disable-setuid-sandbox")
+        # chrome_options.add_argument("--disable-dev-shm-usage")
+        # chrome_options.add_argument("--disable-gpu")
+        # chrome_options.add_argument("--disable-dev-tools")
+        # chrome_options.add_argument("--no-zygote")
+        # chrome_options.add_argument("--single-process")
+        # chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data")
+        # chrome_options.add_argument("--remote-debugging-port=9222")
 
-        # very similar to loop above, could be turned into a function perhaps
-        # you could zip but it makes the code harder to read, just for the sake of
-        # saving 50 iterations
-        for stats_data in youtube_stats_list:
-            stats_data_id = stats_data["id"]
-
-            if data[stats_data_id]["stats"]:
-                raise ValueError("'stats' has a value when it shouldn't have")
-
-            data[stats_data_id]["stats"] = stats_data
-
-        return [
-            {
-                "video_id": video_data["video"]["id"]["videoId"],
-                "channel_title": video_data["video"]["snippet"]["channelTitle"],
-                "channel_id": video_data["video"]["snippet"]["channelId"],
-                "title": video_data["video"]["snippet"]["title"],
-                "thumbnail": video_data["video"]["snippet"]["thumbnails"]["high"][
-                    "url"
-                ],
-                "publish_time": video_data["video"]["snippet"]["publishedAt"],
-                "views": video_data["stats"]["statistics"]["viewCount"],
-            }
-            for video_data in data.values()
-        ]
+        return Chrome(options=chrome_options)
