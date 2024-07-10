@@ -89,29 +89,34 @@ class Collector:
     ) -> list[dict]:
         browser = self._goto_query_page(search_query)
 
-        x = 0
+        loop_start = 0
         videos = []
 
-        while last_video_not_existing := not self._element_exists(
-            browser, f'//a[contains(@href ,"{last_video_id}")]'
-        ):
+        while True:
             video_elements = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
-            for i in range(x, len(video_elements)):
-                if not last_video_not_existing:
-                    break
+            for i in range(loop_start, len(video_elements)):
                 ActionChains(browser).move_to_element(video_elements[i]).perform()
-                videos.append(self.extractor.extract(video_elements[i]))
+                extracted = self.extractor.extract(video_elements[i])
+                if extracted["video_id"] == last_video_id:
+                    break
+                videos.append(extracted)
 
             if self._element_exists(
                 browser, '//yt-formatted-string[contains(text(), "No more results")]'
             ):
                 raise LookupError("Could not find last video id from query")
 
-            x = len(video_elements)
+            if self._element_exists(
+                browser, f'//a[contains(@href ,"{last_video_id}")]'
+            ):
+                break
+
+            loop_start = len(video_elements)
+
+            # Scroll to bottom to trigger new reload
             browser.execute_script(
                 "window.scrollTo(0, 99999999999999999999999999999999)"
             )
-
         return videos
 
     @staticmethod
@@ -141,16 +146,16 @@ class Collector:
     @staticmethod
     def _setup_browser() -> WebDriver:
         chrome_options = Options()
-        chrome_options.add_argument("--headless=true")
-        chrome_options.add_argument("--window-size=1920x1080")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-setuid-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disable-dev-tools")
-        chrome_options.add_argument("--no-zygote")
-        chrome_options.add_argument("--single-process")
-        chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data")
-        chrome_options.add_argument("--remote-debugging-port=9222")
+        # chrome_options.add_argument("--headless=true")
+        # chrome_options.add_argument("--window-size=1920x1080")
+        # chrome_options.add_argument("--no-sandbox")
+        # chrome_options.add_argument("--disable-setuid-sandbox")
+        # chrome_options.add_argument("--disable-dev-shm-usage")
+        # chrome_options.add_argument("--disable-gpu")
+        # chrome_options.add_argument("--disable-dev-tools")
+        # chrome_options.add_argument("--no-zygote")
+        # chrome_options.add_argument("--single-process")
+        # chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data")
+        # chrome_options.add_argument("--remote-debugging-port=9222")
 
         return Chrome(options=chrome_options)
