@@ -1,62 +1,64 @@
 """Module providing tests for Collector class."""
 
-from datetime import UTC, datetime, timedelta
+import json
+import re
+from unittest import mock
 
-from django.test import TestCase
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
 from notifier.lib.collect import Collector
 
 
-class CollectTestCase(TestCase):
+class CollectTestCase(StaticLiveServerTestCase):
     """Class for testing Collector class"""
 
-    def setUp(self) -> None:
-        self.collector = Collector()
-        self.dt = datetime.now(UTC) - timedelta(days=1)
+    def _get_mock_page(self, page_path):
+        browser = Collector()._setup_browser()  # pylint: disable=W0212
+        browser.get(self.live_server_url + page_path)
+        return browser
 
-    def test_get_newest_videos_functions(self):
-        """Testing each individual function of Collector to see if each stage works."""
+    @staticmethod
+    def _remove_inconsistencies(data):
+        for d in data:
+            if d["thumbnail"] is not None:
+                d["thumbnail"] = "/" + re.sub(
+                    r"http:\/\/localhost:\d*?\/", "", d["thumbnail"]
+                )
 
-        test = self.collector.get_initial_video_for_query("test search")
+            if d["channel_img"] is not None:
+                d["channel_img"] = "/" + re.sub(
+                    r"http:\/\/localhost:\d*?\/", "", d["channel_img"]
+                )
 
-        # youtube_list = self.collector._search(  # pylint: disable=W0212
-        #     search_query="test",
-        #     last_datetime=self.dt,
-        # )
+        return data
 
-        # self.assertEqual(youtube_list["kind"], "youtube#searchListResponse")
-        # self.assertEqual(len(youtube_list["items"]), 50)
+    @mock.patch("notifier.lib.collect.Collector._goto_query_page")
+    def test_get_newest_videos_functions(self, mock_goto_query_page):
 
-        # self.assertIn("videoId", youtube_list["items"][0]["id"])
-        # self.assertIn("channelTitle", youtube_list["items"][0]["snippet"])
+        # pos
+        mock_goto_query_page.return_value = self._get_mock_page(
+            "/static/tests/positive.html"
+        )
 
-        # stats_list = self.collector._get_video_statistics(  # pylint: disable=W0212
-        #     youtube_list["items"]
-        # )
+        collector = Collector()
+        positive = collector.get_latest_videos("hello world", "stYBPhSMp94")
 
-        # self.assertEqual(stats_list["kind"], "youtube#videoListResponse")
-        # self.assertEqual(len(stats_list["items"]), 50)
+        with open(
+            "notifier/tests/collect/positive.json", "r", encoding="utf-8"
+        ) as file:
+            data = self._remove_inconsistencies(json.load(file))
+            positive = self._remove_inconsistencies(positive)
+            self.assertEqual(positive, data)
 
-        # self.assertIn("statistics", stats_list["items"][0])
-        # self.assertIn("viewCount", stats_list["items"][0]["statistics"])
+        # neg
+        mock_goto_query_page.return_value = self._get_mock_page(
+            "/static/tests/negative.html"
+        )
 
-        # transformed_data = self.collector._transform_data(  # pylint: disable=W0212
-        #     youtube_list["items"], stats_list["items"]
-        # )
-
-        # self.assertEqual(len(transformed_data), 50)
-        # self.assertEqual(
-        #     "video_id,channel_title,channel_id,title,thumbnail,publish_time,views",
-        #     ",".join(list(transformed_data[0].keys())),
-        # )
-
-    # def test_get_newest_videos_run(self):
-    #     """Test if the full run function works for Collector."""
-
-    #     youtube_video_data = self.collector.run("test", self.dt)
-
-    #     self.assertEqual(
-    #         "video_id,channel_title,channel_id,title,thumbnail,publish_time,views",
-    #         ",".join(list(youtube_video_data[0].keys())),
-    #     )
-    #     self.assertIn("test", youtube_video_data[0]["title"])
+        collector = Collector()
+        self.assertRaises(
+            LookupError, collector.get_latest_videos, "huybg", "doesntexist"
+        )
+        self.assertRaises(ValueError, collector.get_latest_videos, "", "")
+        self.assertRaises(ValueError, collector.get_latest_videos, "h", "")
+        self.assertRaises(ValueError, collector.get_latest_videos, "", "h")

@@ -9,10 +9,6 @@ repos:
     rev: 24.4.2
     hooks:
       - id: black
-  - repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.34.1
-    hooks:
-      - id: djlint-django
   - repo: https://github.com/hadialqattan/pycln
     rev: v2.4.0
     hooks:
