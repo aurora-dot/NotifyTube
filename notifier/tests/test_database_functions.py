@@ -8,6 +8,10 @@ from notifier.models import YouTubeChannel, YouTubeQuery, YouTubeVideo
 
 
 class DatabaseFunctionsTestCase(StaticLiveServerTestCase):
+    """
+    Tests for the database_iterator functions
+    """
+
     def _mock_goto_query_page(self):
         browser = Collector()._setup_browser()  # pylint: disable=W0212
         browser.get(self.live_server_url + "/static/tests/positive.html")
@@ -15,6 +19,9 @@ class DatabaseFunctionsTestCase(StaticLiveServerTestCase):
 
     @mock.patch("notifier.lib.collect.Collector._goto_query_page")
     def test_initial_add(self, mock_goto_query_page):
+        """
+        Tests collecting the newest video given a new query
+        """
         mock_goto_query_page.return_value = self._mock_goto_query_page()
 
         query_str = "test search"
@@ -29,6 +36,9 @@ class DatabaseFunctionsTestCase(StaticLiveServerTestCase):
 
     @mock.patch("notifier.lib.collect.Collector._goto_query_page")
     def test_collect_new_videos(self, mock_goto_query_page):
+        """
+        Tests collecting newest videos from a saved query
+        """
         mock_goto_query_page.return_value = self._mock_goto_query_page()
 
         query_str = "hello world"

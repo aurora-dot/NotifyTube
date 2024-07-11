@@ -33,7 +33,29 @@ class CollectTestCase(StaticLiveServerTestCase):
         return data
 
     @mock.patch("notifier.lib.collect.Collector._goto_query_page")
+    def test_initial_add(self, mock_goto_query_page):
+        """
+        Tests collecting the newest video given a new query
+        """
+        mock_goto_query_page.return_value = self._get_mock_page(
+            "/static/tests/positive.html"
+        )
+
+        collector = Collector()
+
+        query_str = "test search"
+        data = collector.get_initial_video_for_query(query_str)
+
+        self.assertEqual(len(data["video"]["video_id"]), 11)
+        self.assertLessEqual(len(data["video"]["title"]), 100)
+        self.assertTrue("youtube.com" in data["video"]["link"])
+        self.assertTrue("youtube.com" in data["channel"]["channel_link"])
+
+    @mock.patch("notifier.lib.collect.Collector._goto_query_page")
     def test_get_newest_videos_functions(self, mock_goto_query_page):
+        """
+        Test to check getting the newest videos with a given query and video id
+        """
 
         # pos
         mock_goto_query_page.return_value = self._get_mock_page(

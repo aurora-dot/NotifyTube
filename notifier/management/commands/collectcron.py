@@ -1,3 +1,7 @@
+"""
+Scheduler for collecting newest videos for stored queries every hour
+"""
+
 from datetime import datetime
 
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -11,10 +15,13 @@ from notifier.lib.logger import LOGGER
 
 
 class Command(BaseCommand):
+    """
+    Scheduler for collecting newest videos for stored queries every hour
+    """
+
     help = "Runs APScheduler."
 
     def handle(self, *args, **options):
-
         scheduler = BlockingScheduler(timezone=settings.TIME_ZONE)
         scheduler.add_jobstore(DjangoJobStore(), "default")
 
@@ -25,7 +32,7 @@ class Command(BaseCommand):
         scheduler.add_job(
             collect_new_videos,
             trigger=CronTrigger(hour="*/1"),  # Every hour
-            id=job_id,  # The `id` assigned to each job MUST be unique
+            id=job_id,
             max_instances=1,
             replace_existing=True,
         )

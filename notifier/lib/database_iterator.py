@@ -1,3 +1,7 @@
+"""
+Methods which collect and save YouTube videos to store into the database
+"""
+
 import traceback
 from datetime import datetime
 
@@ -11,6 +15,13 @@ collector = Collector()
 
 
 def add_new_search_query(search_query):
+    """
+    Gets the newest YouTube video from a given search query
+    Creates a new YouTube objects to save the data into the database
+
+    Args:
+        search_query: The query to search for on YouTube
+    """
     initial_video = collector.get_initial_video_for_query(search_query)
 
     query, _ = models.YouTubeQuery.objects.get_or_create(query=search_query)
@@ -29,6 +40,12 @@ def add_new_search_query(search_query):
 
 
 def collect_new_videos():
+    """
+    Gets the newest YouTube data for each YouTubeQuery object in the database
+    Loops through the newest videos until hitting the
+        previous latest video from last call
+    Saves the data back into the db and updates the query object with the latest video
+    """
     youtube_search_queries = models.YouTubeQuery.objects.all().prefetch_related(
         "latest"
     )
