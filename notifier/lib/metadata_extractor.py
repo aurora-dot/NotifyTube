@@ -20,11 +20,11 @@ class MetadataExtractor:
             video_element: WebElement, for extraction of youtube video data
         """
 
-        return (
-            self._get_link_data(video_element)
-            | self._get_title_and_thumbnail(video_element)
-            | self._get_channel_data(video_element)
-        )
+        return {
+            "video": self._get_link_data(video_element)
+            | self._get_title_and_thumbnail(video_element),
+            "channel": self._get_channel_data(video_element),
+        }
 
     def _get_title_and_thumbnail(self, video_element):
         title = (
@@ -42,14 +42,17 @@ class MetadataExtractor:
         return {"title": title, "thumbnail": thumbnail}
 
     def _get_link_data(self, video_element):
-        url_prefix = "https://www.youtube.com/watch?v="
+        normal_url_prefix = "https://www.youtube.com/watch?v="
+        shorts_url_prefix = "https://www.youtube.com/shorts/"
 
         dirty_link = video_element.find_element(By.ID, "thumbnail").get_attribute(
             "href"
         )
         cleaned_link = dirty_link.split("&", 1)[0]
-        video_id = cleaned_link.removeprefix(url_prefix)
-        if url_prefix in video_id:
+        first_pass = cleaned_link.removeprefix(normal_url_prefix)
+        video_id = first_pass.removeprefix(shorts_url_prefix)
+
+        if normal_url_prefix in video_id or shorts_url_prefix in video_id:
             raise ValueError("video_id still contains url prefix")
 
         return {"video_id": video_id, "link": cleaned_link}
@@ -63,7 +66,7 @@ class MetadataExtractor:
         channel_link = channel_name_element.get_attribute("href")
 
         return {
-            "channel_name": channel_name,
             "channel_link": channel_link,
+            "channel_name": channel_name,
             "channel_img": channel_img,
         }
