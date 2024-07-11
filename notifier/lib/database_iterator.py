@@ -1,5 +1,11 @@
+import traceback
+from datetime import datetime
+
+from sentry_sdk import capture_exception
+
 from notifier import models
 from notifier.lib.collect import Collector
+from notifier.lib.logger import LOGGER
 
 collector = Collector()
 
@@ -27,24 +33,62 @@ def collect_new_videos():
         "latest"
     )
 
+    LOGGER.info("Collector - %s: Started collecting...", datetime.now())
+
     for search_query in youtube_search_queries:
         videos = []
-        collected_videos = collector.get_latest_videos(
-            search_query.query, search_query.latest.video_id
-        )
 
+        try:
+            LOGGER.info(
+                "Collector - %s: collecting videos for query %s (id: %s), stopping at %s",
+                datetime.now(),
+                search_query.query,
+                search_query.id,
+                search_query.latest.video_id,
+            )
+
+            collected_videos = collector.get_latest_videos(
+                search_query.query, search_query.latest.video_id
+            )
+
+            LOGGER.info(
+                "Collector - %s: collected videos for query %s (id: %s)",
+                datetime.now(),
+                search_query.query,
+                search_query.id,
+            )
+        except Exception as error:  # pylint: disable=W0718
+            capture_exception(error)
+            error_text = f"{datetime.now()}: {error.__class__.__name__} - {error}, Query ID: {search_query.id}, Query Str: '{search_query.query}'"  # pylint: disable=C0301
+            traceback_str = traceback.format_exc()
+            LOGGER.error(error_text)
+            LOGGER.error(traceback_str)
+
+            # skip rest of iteration code
+            continue
+
+        LOGGER.info("Collector - %s: Saving data into db...", datetime.now())
         for video in collected_videos:
             channel, _ = models.YouTubeChannel.objects.get_or_create(**video["channel"])
             videos.append(
                 models.YouTubeVideo(
                     **video["video"],
                     youtube_query=search_query,
-                    youtube_channel=channel
+                    youtube_channel=channel,
                 )
             )
         models.YouTubeVideo.objects.bulk_create(videos, ignore_conflicts=True)
 
-        search_query.latest = models.YouTubeVideo.objects.get(
-            video_id=videos[0].video_id
-        )
+        newest_video = models.YouTubeVideo.objects.get(video_id=videos[0].video_id)
+        search_query.latest = newest_video
         search_query.save()
+        LOGGER.info(
+            "Collector - %s: Saved into db! Newest video id for query is %s",
+            datetime.now(),
+            newest_video.video_id,
+        )
+
+    LOGGER.info(
+        "Collector - %s: Completed collection!",
+        datetime.now(),
+    )
