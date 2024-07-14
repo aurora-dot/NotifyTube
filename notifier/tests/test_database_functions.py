@@ -17,6 +17,7 @@ class DatabaseFunctionsTestCase(StaticLiveServerTestCase):
         browser.get(self.live_server_url + "/static/tests/positive.html")
         return browser
 
+    # failing
     @mock.patch("notifier.lib.collect.Collector._goto_query_page")
     def test_initial_add(self, mock_goto_query_page):
         """

@@ -24,7 +24,7 @@ def add_new_search_query(search_query):
     """
     initial_videos = collector.get_initial_video_for_query(search_query)
     query, _ = models.YouTubeQuery.objects.get_or_create(query=search_query)
-    # wip: if save data breaks while using this method, it breaks the whole query
+    # TODO: if save data breaks while using this method, it breaks the whole query
     _save_data(initial_videos, query)
 
 
@@ -104,6 +104,8 @@ def _save_data(collected_videos, search_query):
                 youtube_channel=channel,
             )
         )
+
+    # TODO if this breaks, and query has no videos, delete query
     models.YouTubeVideo.objects.bulk_create(videos, ignore_conflicts=True)
 
     newest_video = models.YouTubeVideo.objects.get(video_id=videos[0].video_id)
