@@ -1,0 +1,24 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en" {% block html_attributes %}{% endblock html_attributes %}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="" />
+    <meta name="keywords" content=""/>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    {% block extra_head_items %}
+    {% endblock extra_head_items %}
+    <title>
+      {% block title %}
+        Home
+      {% endblock title %}
+    | NotifyTube </title>
+  </head>
+  <body class="{% block body_classes %}{% endblock body_classes %}">
+    {% block body %}
+    {% endblock body %}
+  </body>
+</html>

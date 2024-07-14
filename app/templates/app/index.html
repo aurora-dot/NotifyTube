@@ -1,0 +1,8 @@
+{% extends "app/base.html" %}
+
+{% block body %}
+  <form action="{% url 'app:index' %}" method="post" name="search">
+    {% csrf_token %}
+    {{ form }}
+  </form>
+{% endblock body %}

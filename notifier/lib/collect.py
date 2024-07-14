@@ -2,6 +2,7 @@
 Collects YouTube video data.
 """
 
+import time
 from urllib.parse import quote_plus
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
@@ -73,6 +74,7 @@ class Collector:
 
         browser = self._goto_query_page(search_query)
         first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
+        time.sleep(2)
         return self.extractor.extract(first_video)
 
     def _goto_query_page(self, search_query: str) -> WebDriver:

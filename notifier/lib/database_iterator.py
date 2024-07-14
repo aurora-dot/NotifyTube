@@ -96,14 +96,21 @@ def collect_new_videos():
             )
         models.YouTubeVideo.objects.bulk_create(videos, ignore_conflicts=True)
 
-        newest_video = models.YouTubeVideo.objects.get(video_id=videos[0].video_id)
-        search_query.latest = newest_video
-        search_query.save()
-        LOGGER.info(
-            "Collector - %s: Saved into db! Newest video id for query is %s",
-            datetime.now(),
-            newest_video.video_id,
-        )
+        if videos:
+            newest_video = models.YouTubeVideo.objects.get(video_id=videos[0].video_id)
+            search_query.latest = newest_video
+            search_query.save()
+            LOGGER.info(
+                "Collector - %s: Saved into db! Newest video id for query is %s",
+                datetime.now(),
+                newest_video.video_id,
+            )
+        else:
+            LOGGER.info(
+                "Collector - %s: No new videos for query %s",
+                datetime.now(),
+                search_query.query,
+            )
 
     LOGGER.info(
         "Collector - %s: Completed collection!",
