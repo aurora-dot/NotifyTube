@@ -42,17 +42,22 @@ def collect_new_videos():
     LOGGER.info("Collector - %s: Started collecting...", datetime.now())
 
     for search_query in youtube_search_queries:
+        latest_video_ids = (
+            models.YouTubeVideo.objects.filter(youtube_query=search_query)
+            .order_by("-created_at")
+            .values_list("video_id", flat=True)[:5]
+        )
         try:
             LOGGER.info(
                 "Collector - %s: collecting videos for query '%s' (id: %s), stopping at %s",
                 datetime.now(),
                 search_query.query,
                 search_query.id,
-                search_query.latest.video_id,
+                latest_video_ids[0],
             )
 
             collected_videos = collector.get_latest_videos(
-                search_query.query, search_query.latest.video_id
+                search_query.query, latest_video_ids
             )
 
             LOGGER.info(
