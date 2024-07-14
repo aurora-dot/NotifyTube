@@ -36,6 +36,6 @@ class QueryView(ListView):
             )
             .prefetch_related("youtube_channel")
             .prefetch_related("youtube_query")
-            .order_by("created_at")
+            .order_by("-created_at")
         )
         return qs

@@ -1,5 +1,5 @@
-{% extends "app/base.html" %}
+{% extends "app/main.html" %}
 
-{% block body %}
-  {% for video in object_list %}{{ video.title }}{% endfor %}
-{% endblock body %}
+{% block main %}
+  {% for video in object_list %}<p>{{ video.title }}</p>{% endfor %}
+{% endblock main %}
