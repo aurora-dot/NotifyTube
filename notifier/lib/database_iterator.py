@@ -5,6 +5,7 @@ Methods which collect and save YouTube videos to store into the database
 import traceback
 from datetime import datetime
 
+from django.db import IntegrityError
 from sentry_sdk import capture_exception
 
 from notifier import models
@@ -25,18 +26,46 @@ def add_new_search_query(search_query):
     initial_video = collector.get_initial_video_for_query(search_query)
 
     query, _ = models.YouTubeQuery.objects.get_or_create(query=search_query)
-    channel, _ = models.YouTubeChannel.objects.get_or_create(
-        channel_link=initial_video["channel"].pop("channel_link"),
-        defaults=initial_video["channel"],
-    )
-    video, _ = models.YouTubeVideo.objects.get_or_create(
-        video_id=initial_video["video"].pop("video_id"),
-        defaults=initial_video["video"]
-        | {"youtube_query": query, "youtube_channel": channel},
-    )
 
-    query.latest = video
-    query.save()
+    channel = None
+
+    try:
+        channel, _ = models.YouTubeChannel.objects.get_or_create(
+            channel_link=initial_video["channel"].pop("channel_link"),
+            defaults=initial_video["channel"],
+        )
+    except IntegrityError as e:
+        query.delete()
+        query = None
+
+        capture_exception(e)
+        LOGGER.info(e)
+        LOGGER.info(traceback.format_exc())
+
+    video = None
+    if query and channel:
+        try:
+            video, _ = models.YouTubeVideo.objects.get_or_create(
+                video_id=initial_video["video"].pop("video_id"),
+                defaults=initial_video["video"]
+                | {"youtube_query": query, "youtube_channel": channel},
+            )
+        except IntegrityError as e:
+            channel.delete()
+            channel = None
+
+            query.delete()
+            query = None
+
+            capture_exception(e)
+            LOGGER.info(e)
+            LOGGER.info(traceback.format_exc())
+
+    if query and video and channel:
+        query.latest = video
+        query.save()
+    else:
+        raise ValueError("Could not get video for query")
 
 
 def collect_new_videos():
