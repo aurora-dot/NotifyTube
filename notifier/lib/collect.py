@@ -75,8 +75,12 @@ class Collector:
             raise ValueError("Nothing in search_query parameter")
 
         browser = self._goto_query_page(search_query)
-        first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
-        return self.extractor.extract(first_video)
+        videos = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
+        extracted = []
+        for video in videos:
+            ActionChains(browser).move_to_element(video).perform()
+            extracted.append(self.extractor.extract(video))
+        return extracted
 
     def _goto_query_page(self, search_query: str) -> WebDriver:
         browser = self._setup_browser()

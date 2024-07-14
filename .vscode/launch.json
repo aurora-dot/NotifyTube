@@ -21,6 +21,15 @@
       "django": true,
       "autoStartBrowser": false,
       "program": "${workspaceFolder}/manage.py"
+    },
+    {
+      "name": "Python Debugger: Collect Now",
+      "type": "debugpy",
+      "request": "launch",
+      "args": ["collectnow"],
+      "django": true,
+      "autoStartBrowser": false,
+      "program": "${workspaceFolder}/manage.py"
     }
   ]
 }
