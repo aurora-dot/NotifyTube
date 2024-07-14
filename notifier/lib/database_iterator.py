@@ -84,19 +84,21 @@ def collect_new_videos():
             # skip rest of iteration code
             continue
 
-        LOGGER.info("Collector - %s: Saving data into db...", datetime.now())
-        for video in collected_videos:
-            channel, _ = models.YouTubeChannel.objects.get_or_create(**video["channel"])
-            videos.append(
-                models.YouTubeVideo(
-                    **video["video"],
-                    youtube_query=search_query,
-                    youtube_channel=channel,
+        if collected_videos:
+            LOGGER.info("Collector - %s: Saving data into db...", datetime.now())
+            for video in collected_videos:
+                channel, _ = models.YouTubeChannel.objects.get_or_create(
+                    **video["channel"]
                 )
-            )
-        models.YouTubeVideo.objects.bulk_create(videos, ignore_conflicts=True)
+                videos.append(
+                    models.YouTubeVideo(
+                        **video["video"],
+                        youtube_query=search_query,
+                        youtube_channel=channel,
+                    )
+                )
+            models.YouTubeVideo.objects.bulk_create(videos, ignore_conflicts=True)
 
-        if videos:
             newest_video = models.YouTubeVideo.objects.get(video_id=videos[0].video_id)
             search_query.latest = newest_video
             search_query.save()
