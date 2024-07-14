@@ -1,13 +1,12 @@
 module.exports = {
   mode: "jit",
   content: [
-    "core/templates/core/*.html",
-    "app/templates/app/*.html",
-    "notifier/templates/notifier/*.html",
-    "templates/*.html",
+    "core/**/*.{html,js,py}",
+    "app/**/*.{html,js,py}",
+    "notifier/**/*.{html,js,py}",
   ],
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/forms")],
 };

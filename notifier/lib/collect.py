@@ -2,6 +2,8 @@
 Collects YouTube video data.
 """
 
+import time
+from datetime import datetime
 from urllib.parse import quote_plus
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
@@ -13,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+from notifier.lib.logger import LOGGER
 from notifier.lib.metadata_extractor import MetadataExtractor
 
 
@@ -89,18 +92,31 @@ class Collector:
     ) -> list[dict]:
         browser = self._goto_query_page(search_query)
 
-        max_scrolls = 120
+        max_scrolls = 25
         loop_start = 0
         current_scrolls = 0
         videos = []
 
         while current_scrolls <= max_scrolls:
+            LOGGER.info(
+                "Collector - %s: scroll %s/%s for query '%s'",
+                datetime.now(),
+                current_scrolls,
+                max_scrolls,
+                search_query,
+            )
             video_elements = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
             for i in range(loop_start, len(video_elements)):
                 ActionChains(browser).move_to_element(video_elements[i]).perform()
                 extracted = self.extractor.extract(video_elements[i])
                 if extracted["video"]["video_id"] == last_video_id:
                     break
+                LOGGER.info(
+                    "Collector - %s: found video '%s' for query '%s'",
+                    datetime.now(),
+                    extracted["video"]["video_id"],
+                    search_query,
+                )
                 videos.append(extracted)
 
             if self._element_exists(
@@ -121,6 +137,8 @@ class Collector:
             )
 
             current_scrolls += 1
+
+            time.sleep(1)
 
         # latter half of bool statement is just in case on the last scroll it is found
         if current_scrolls >= max_scrolls and not self._element_exists(
@@ -159,16 +177,11 @@ class Collector:
     @staticmethod
     def _setup_browser() -> WebDriver:
         chrome_options = Options()
+        chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--headless=true")
-        # chrome_options.add_argument("--window-size=1920x1080")
-        # chrome_options.add_argument("--no-sandbox")
-        # chrome_options.add_argument("--disable-setuid-sandbox")
-        # chrome_options.add_argument("--disable-dev-shm-usage")
-        # chrome_options.add_argument("--disable-gpu")
-        # chrome_options.add_argument("--disable-dev-tools")
-        # chrome_options.add_argument("--no-zygote")
-        # chrome_options.add_argument("--single-process")
-        # chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data")
-        # chrome_options.add_argument("--remote-debugging-port=9222")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"  # pylint: disable=C0301
+        )
 
         return Chrome(options=chrome_options)
