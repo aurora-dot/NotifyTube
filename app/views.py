@@ -19,6 +19,8 @@ class IndexView(FormView):
         if "query" in request.POST:
             search_query = request.POST["query"]
             if not YouTubeQuery.objects.filter(query=search_query).exists():
+                # this should be on a seperate thread and redirect to a loading page
+                # which waits for it to finish getting first video
                 add_new_search_query(search_query)
             return redirect("app:query", slug=search_query)
         else:
