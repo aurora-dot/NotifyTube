@@ -57,7 +57,7 @@ def collect_new_videos():
 
         try:
             LOGGER.info(
-                "Collector - %s: collecting videos for query %s (id: %s), stopping at %s",
+                "Collector - %s: collecting videos for query '%s' (id: %s), stopping at %s",
                 datetime.now(),
                 search_query.query,
                 search_query.id,
@@ -69,11 +69,12 @@ def collect_new_videos():
             )
 
             LOGGER.info(
-                "Collector - %s: collected videos for query %s (id: %s)",
+                "Collector - %s: collected videos for query '%s' (id: %s)",
                 datetime.now(),
                 search_query.query,
                 search_query.id,
             )
+
         except Exception as error:  # pylint: disable=W0718
             capture_exception(error)
             error_text = f"{datetime.now()}: {error.__class__.__name__} - {error}, Query ID: {search_query.id}, Query Str: '{search_query.query}'"  # pylint: disable=C0301
@@ -103,13 +104,13 @@ def collect_new_videos():
             search_query.latest = newest_video
             search_query.save()
             LOGGER.info(
-                "Collector - %s: Saved into db! Newest video id for query is %s",
+                "Collector - %s: Saved into db! Newest video id for query is '%s'",
                 datetime.now(),
                 newest_video.video_id,
             )
         else:
             LOGGER.info(
-                "Collector - %s: No new videos for query %s",
+                "Collector - %s: No new videos for query '%s'",
                 datetime.now(),
                 search_query.query,
             )

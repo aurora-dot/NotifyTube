@@ -3,6 +3,7 @@ Collects YouTube video data.
 """
 
 import time
+from datetime import datetime
 from urllib.parse import quote_plus
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
@@ -14,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+from notifier.lib.logger import LOGGER
 from notifier.lib.metadata_extractor import MetadataExtractor
 
 
@@ -91,7 +93,7 @@ class Collector:
     ) -> list[dict]:
         browser = self._goto_query_page(search_query)
 
-        max_scrolls = 120
+        max_scrolls = 20
         loop_start = 0
         current_scrolls = 0
         videos = []
@@ -103,6 +105,12 @@ class Collector:
                 extracted = self.extractor.extract(video_elements[i])
                 if extracted["video"]["video_id"] == last_video_id:
                     break
+                LOGGER.info(
+                    "Collector - %s: found video '%s' for query '%s'",
+                    datetime.now(),
+                    extracted["video"]["video_id"],
+                    search_query,
+                )
                 videos.append(extracted)
 
             if self._element_exists(
@@ -128,9 +136,14 @@ class Collector:
         if current_scrolls >= max_scrolls and not self._element_exists(
             browser, f'//a[contains(@href ,"{last_video_id}")]'
         ):
-            raise LookupError(
-                f"Could not find the previous video in {current_scrolls} page scrolls"
+            LOGGER.warning(
+                "Collector - %s: could not find latest video for query '%s', resetting latest...",  # pylint: disable=C0301
+                datetime.now(),
+                search_query,
             )
+            return [
+                videos[0],
+            ]
 
         return videos
 
