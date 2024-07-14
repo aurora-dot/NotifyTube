@@ -1,5 +1,7 @@
 {% extends "app/main.html" %}
 
 {% block main %}
-  {% for video in object_list %}<p>{{ video.title }}</p>{% endfor %}
+  {% for video in object_list %}
+    {% include "app/components/video.html" with video=video %}
+  {% endfor %}
 {% endblock main %}
