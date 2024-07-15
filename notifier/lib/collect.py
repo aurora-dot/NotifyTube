@@ -89,7 +89,7 @@ class Collector:
         browser.get(
             f"https://www.youtube.com/results?search_query={quote_plus(search_query)}&{self.url_parameter_for_ordering_by_latest}"  # pylint: disable=C0301
         )
-        time.sleep(60)
+        time.sleep(10)
         print("----- screenshot start -----\n\n")
         print(browser.get_screenshot_as_base64())
         print("----- screenshot end -----\n\n")
@@ -193,9 +193,9 @@ class Collector:
     @staticmethod
     def _setup_browser() -> WebDriver:
         chrome_options = Options()
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--headless=true")
-        chrome_options.add_argument("--disable-gpu")
+        # chrome_options.add_argument("--window-size=1920,1080")
+        # chrome_options.add_argument("--headless=true")
+        # chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"  # pylint: disable=C0301
         )
