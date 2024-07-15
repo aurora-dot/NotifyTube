@@ -91,7 +91,7 @@ class Collector:
         )
         time.sleep(5)
         print("----- screenshot start -----\n\n")
-        print(browser.get_screenshot_as_base64)
+        print(browser.get_screenshot_as_base64())
         print("----- screenshot end -----\n\n")
 
         self._close_cookie_popup(browser)
