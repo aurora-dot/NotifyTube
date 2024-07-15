@@ -89,7 +89,7 @@ class Collector:
         browser.get(
             f"https://www.youtube.com/results?search_query={quote_plus(search_query)}&{self.url_parameter_for_ordering_by_latest}"  # pylint: disable=C0301
         )
-        time.sleep(5)
+        time.sleep(60)
         print("----- screenshot start -----\n\n")
         print(browser.get_screenshot_as_base64())
         print("----- screenshot end -----\n\n")
