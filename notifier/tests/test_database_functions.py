@@ -18,12 +18,10 @@ class DatabaseFunctionsTestCase(StaticLiveServerTestCase):
         return browser
 
     # failing
-    @mock.patch("notifier.lib.collect.Collector._goto_query_page")
-    def test_initial_add(self, mock_goto_query_page):
+    def test_initial_add(self):
         """
         Tests collecting the newest video given a new query
         """
-        mock_goto_query_page.return_value = self._mock_goto_query_page()
 
         query_str = "test search"
         add_new_search_query(query_str)
@@ -32,8 +30,8 @@ class DatabaseFunctionsTestCase(StaticLiveServerTestCase):
         self.assertEqual(query_obj.query, query_str)
         self.assertEqual(len(query_obj.latest.video_id), 11)
         self.assertLessEqual(len(query_obj.latest.title), 100)
-        self.assertTrue("youtube.com" in query_obj.latest.link)
-        self.assertTrue("youtube.com" in query_obj.latest.youtube_channel.channel_link)
+        self.assertIn("youtube.com", query_obj.latest.link)
+        self.assertIn("youtube.com", query_obj.latest.youtube_channel.channel_link)
 
     @mock.patch("notifier.lib.collect.Collector._goto_query_page")
     def test_collect_new_videos(self, mock_goto_query_page):

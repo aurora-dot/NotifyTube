@@ -32,7 +32,9 @@ class Collector:
     extractor = MetadataExtractor()
     url_parameter_for_ordering_by_latest = "sp=CAI%253D"
 
-    def get_latest_videos(self, search_query: str, latest_video_ids: str) -> list[dict]:
+    def get_latest_videos(
+        self, search_query: str, latest_video_ids: str, max_scrolls: int = 25
+    ) -> list[dict]:
         """
         Collects video data given a search query and an previous video id to stop at
 
@@ -54,7 +56,7 @@ class Collector:
         if not latest_video_ids or latest_video_ids == "" or latest_video_ids == []:
             raise ValueError("Nothing in last_video_id parameter")
 
-        return self._search_scroll_extract(search_query, latest_video_ids)
+        return self._search_scroll_extract(search_query, latest_video_ids, max_scrolls)
 
     def get_initial_video_for_query(self, search_query: str) -> dict:
         """
@@ -92,11 +94,10 @@ class Collector:
         return browser
 
     def _search_scroll_extract(
-        self, search_query: str, latest_video_ids: list
+        self, search_query: str, latest_video_ids: list, max_scrolls: int
     ) -> list[dict]:
         browser = self._goto_query_page(search_query)
 
-        max_scrolls = 25
         loop_start = 0
         current_scrolls = 0
         videos = []
