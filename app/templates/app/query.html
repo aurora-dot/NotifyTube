@@ -1,6 +1,7 @@
 {% extends "app/main.html" %}
 
 {% block main %}
+  {% include "app/components/search.html" with form_classes_extra="mb-8" %}
   <div class="space-y-14">
     {% for video in object_list %}
       {% include "app/components/video.html" with video=video %}

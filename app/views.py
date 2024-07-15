@@ -2,6 +2,8 @@
 Views for app django application
 """
 
+from typing import Any
+
 from django.shortcuts import redirect
 from django.views.generic import FormView, ListView
 
@@ -30,6 +32,11 @@ class IndexView(FormView):
 class QueryView(ListView):
     template_name = "app/query.html"
     model = YouTubeVideo
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["form"] = YouTubeQueryForm()
+        return context
 
     def get_queryset(self):
         qs = (

@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
         scheduler.add_job(
             collect_new_videos,
-            trigger=CronTrigger(hour="*/1"),  # Every hour
+            trigger=CronTrigger(minute="*/30"),  # Every 30 minutes
             id=job_id,
             max_instances=1,
             replace_existing=True,

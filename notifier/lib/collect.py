@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from urllib.parse import quote_plus
 
+from django.conf import settings
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
@@ -32,7 +33,9 @@ class Collector:
     extractor = MetadataExtractor()
     url_parameter_for_ordering_by_latest = "sp=CAI%253D"
 
-    def get_latest_videos(self, search_query: str, last_video_id: str) -> list[dict]:
+    def get_latest_videos(
+        self, search_query: str, latest_video_ids: str, max_scrolls: int = 25
+    ) -> list[dict]:
         """
         Collects video data given a search query and an previous video id to stop at
 
@@ -51,10 +54,10 @@ class Collector:
         """
         if not search_query or search_query == "":
             raise ValueError("Nothing in search_query parameter")
-        if not last_video_id or last_video_id == "":
+        if not latest_video_ids or latest_video_ids == "" or latest_video_ids == []:
             raise ValueError("Nothing in last_video_id parameter")
 
-        return self._search_scroll_extract(search_query, last_video_id)
+        return self._search_scroll_extract(search_query, latest_video_ids, max_scrolls)
 
     def get_initial_video_for_query(self, search_query: str) -> dict:
         """
@@ -75,24 +78,29 @@ class Collector:
             raise ValueError("Nothing in search_query parameter")
 
         browser = self._goto_query_page(search_query)
-        first_video = browser.find_element(By.TAG_NAME, self.youtube_video_tag)
-        return self.extractor.extract(first_video)
+        videos = browser.find_elements(By.TAG_NAME, self.youtube_video_tag)
+        extracted = []
+        for video in videos:
+            ActionChains(browser).move_to_element(video).perform()
+            extracted.append(self.extractor.extract(video))
+        return extracted
 
     def _goto_query_page(self, search_query: str) -> WebDriver:
         browser = self._setup_browser()
         browser.get(
             f"https://www.youtube.com/results?search_query={quote_plus(search_query)}&{self.url_parameter_for_ordering_by_latest}"  # pylint: disable=C0301
         )
-        self._close_cookie_popup(browser)
+
+        if not settings.GITHUB_ACTIONS:
+            self._close_cookie_popup(browser)
 
         return browser
 
     def _search_scroll_extract(
-        self, search_query: str, last_video_id: str
+        self, search_query: str, latest_video_ids: list, max_scrolls: int
     ) -> list[dict]:
         browser = self._goto_query_page(search_query)
 
-        max_scrolls = 25
         loop_start = 0
         current_scrolls = 0
         videos = []
@@ -109,7 +117,7 @@ class Collector:
             for i in range(loop_start, len(video_elements)):
                 ActionChains(browser).move_to_element(video_elements[i]).perform()
                 extracted = self.extractor.extract(video_elements[i])
-                if extracted["video"]["video_id"] == last_video_id:
+                if extracted["video"]["video_id"] in latest_video_ids:
                     break
                 LOGGER.info(
                     "Collector - %s: found video '%s' for query '%s'",
@@ -124,9 +132,7 @@ class Collector:
             ):
                 raise LookupError("Could not find last video id from query")
 
-            if self._element_exists(
-                browser, f'//a[contains(@href ,"{last_video_id}")]'
-            ):
+            if self._video_is_on_page(browser, latest_video_ids):
                 break
 
             loop_start = len(video_elements)
@@ -141,14 +147,22 @@ class Collector:
             time.sleep(1)
 
         # latter half of bool statement is just in case on the last scroll it is found
-        if current_scrolls >= max_scrolls and not self._element_exists(
-            browser, f'//a[contains(@href ,"{last_video_id}")]'
+        if current_scrolls >= max_scrolls and not self._video_is_on_page(
+            browser, latest_video_ids
         ):
             raise LookupError(
                 f"Could not find the previous video in {current_scrolls} page scrolls"
             )
 
         return videos
+
+    def _video_is_on_page(self, browser, latest_video_ids):
+        return any(
+            [
+                self._element_exists(browser, f'//a[contains(@href ,"{video_id}")]')
+                for video_id in latest_video_ids
+            ]
+        )
 
     @staticmethod
     def _element_exists(browser: WebDriver, xpath_string: str) -> bool:

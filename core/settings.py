@@ -33,7 +33,7 @@ ENV = environ.Env(
     ),
     SITENAME=(str, "*"),
     SENTRY_DSN=(str, None),
-    YOUTUBE_API_KEY=(str, None),
+    GITHUB_ACTIONS=(bool, False),
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
@@ -42,10 +42,8 @@ DEBUG = ENV("DEBUG")
 SECRET_KEY = ENV("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = [ENV("SITENAME")]
 SENTRY_DSN = ENV("SENTRY_DSN")
-YOUTUBE_API_KEY = ENV("YOUTUBE_API_KEY")
+GITHUB_ACTIONS = ENV("GITHUB_ACTIONS")
 
-if not YOUTUBE_API_KEY:
-    raise ValueError("Environment: YOUTUBE_API_KEY needs to be not null / none")
 
 if not DEBUG and SENTRY_DSN:
     sentry_sdk.init(
