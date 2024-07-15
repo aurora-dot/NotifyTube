@@ -34,6 +34,7 @@ ENV = environ.Env(
     SITENAME=(str, "*"),
     SENTRY_DSN=(str, None),
     YOUTUBE_API_KEY=(str, None),
+    GITHUB_ACTIONS=(bool, False),
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
