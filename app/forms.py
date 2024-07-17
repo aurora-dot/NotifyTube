@@ -36,7 +36,7 @@ class YouTubeEmailSubscription(forms.ModelForm):
         widgets = {
             "email_frequency": forms.Select(
                 attrs={
-                    "class": "block w-full pl-3 pr-10 py-1.5 text-sm border-0 ring-gray-300 focus:outline-none hover:ring-purple-500 focus:ring-purple-500 ring-1 focus:ring-2 rounded-md",
+                    "class": "block w-full pl-3 pr-10 py-1.5 text-sm border-0 ring-gray-300 focus:outline-none hover:ring-purple-500 focus:ring-purple-500 ring-1 focus:ring-2 focus:ring-inset rounded-md",
                     "required": True,
                 }
             )
