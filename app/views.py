@@ -63,7 +63,7 @@ class QueryView(ListView):
         return context
 
     def get_queryset(self):
-        qs = (
+        return (
             self.model.objects.filter(
                 youtube_query__query=self.kwargs.get("slug"),
             )
@@ -71,4 +71,3 @@ class QueryView(ListView):
             .prefetch_related("youtube_query")
             .order_by("-created_at")
         )
-        return qs

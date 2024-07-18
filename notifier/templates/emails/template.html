@@ -1,1 +1,25 @@
-hi
+<html lang="en">
+  <head>
+    <style></style>
+  </head>
+  <body>
+    <h1>New YouTube videos for: {{ query.query }}</h1>
+    <div>
+      {% for video in new_videos %}
+        <div>
+          <a href="{{ video.link }}">
+            <img src="{{ video.thumbnail }}"
+                 alt="Thumbnail for video titled: {{ video.title }}, made by {{ video.youtube_channel.channel_name }}" />
+            <p>{{ video.title }}</p>
+          </a>
+          <div>
+            <img src="{{ video.youtube_channel.channel_img }}"
+                 alt="Channel icon for {{ video.youtube_channel.channel_name }}" />
+            <a href="{{ video.youtube_channel.channel_link }}">{{ video.youtube_channel.channel_name }}</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% comment %} <a href="{% url "app:unsubscribe" subscription.slug %}">Unsubscribe</a> {% endcomment %}
+  </body>
+</html>

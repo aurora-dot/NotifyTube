@@ -30,6 +30,15 @@
       "django": true,
       "autoStartBrowser": false,
       "program": "${workspaceFolder}/manage.py"
+    },
+    {
+      "name": "Python Debugger: Cron",
+      "type": "debugpy",
+      "request": "launch",
+      "args": ["cron"],
+      "django": true,
+      "autoStartBrowser": false,
+      "program": "${workspaceFolder}/manage.py"
     }
   ]
 }

@@ -96,7 +96,9 @@ def _save_data(collected_videos, search_query):
     videos = []
     LOGGER.info("Collector - %s: Saving data into db...", datetime.now())
     for video in collected_videos:
-        channel, _ = models.YouTubeChannel.objects.get_or_create(**video["channel"])
+        channel, _ = models.YouTubeChannel.objects.get_or_create(
+            channel_link=video["channel"].pop("channel_link"), defaults=video["channel"]
+        )
         videos.append(
             models.YouTubeVideo(
                 **video["video"],

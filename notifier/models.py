@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models  # nopycln: import
 
 
@@ -57,3 +59,5 @@ class Subscription(models.Model):
         choices=SubscriptionEmailFrequency.choices,
         default=SubscriptionEmailFrequency.DAILY,
     )
+    last_sent = models.DateTimeField(auto_now=True)
+    slug = models.SlugField(default=uuid.uuid4(), editable=False, unique=True)
