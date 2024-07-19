@@ -9,7 +9,6 @@ on:
 env:
   node-version: 21
   python-version: 3.12
-  YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
 
 jobs:
   test:
@@ -17,6 +16,7 @@ jobs:
     env:
       POETRY_VERSION: "1.8.3"
       POETRY_HOME: "~/.local/"
+      HEROKU: "False"
 
     steps:
       - uses: actions/checkout@v2
