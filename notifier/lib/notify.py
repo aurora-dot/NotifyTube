@@ -54,7 +54,7 @@ def notify_common(freq):
                 [email],
                 html_message=message,
             )
-            query.save()
+            subscription.save()
             LOGGER.info(
                 "Notifier - %s: Sent emails for query %s",
                 datetime.now(),
