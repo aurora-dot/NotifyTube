@@ -29,7 +29,7 @@ class Command(BaseCommand):
         crons = {
             "collect_new_videos": (
                 collect_new_videos,
-                CronTrigger(hour="0-23", minute="30"),
+                CronTrigger(hour="*/1", minute="30"),
             ),
             "hourly_email_notification": (notify_hourly, CronTrigger(hour="*/1")),
             "daily_email_notification": (notify_daily, CronTrigger(day="*/1")),
