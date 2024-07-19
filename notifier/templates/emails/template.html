@@ -1,21 +1,33 @@
 <html lang="en">
-  <head>
-    <style></style>
-  </head>
   <body>
     <h1>New YouTube videos for: {{ query.query }}</h1>
     <div>
       {% for video in new_videos %}
-        <div>
+        <div style="padding-bottom: 2rem">
           <a href="{{ video.link }}">
             <img src="{{ video.thumbnail }}"
                  alt="Thumbnail for video titled: {{ video.title }}, made by {{ video.youtube_channel.channel_name }}" />
-            <p>{{ video.title }}</p>
+            <p style="font-weight: 600;
+                      font-size: 1.25rem;
+                      line-height: 1.75rem;
+                      margin-top: 0.5rem">{{ video.title }}</p>
           </a>
-          <div>
+          <div style="display: flex;
+                      align-items: center;
+                      margin-top: 0.5rem;
+                      margin-bottom: 0.5rem">
             <img src="{{ video.youtube_channel.channel_img }}"
-                 alt="Channel icon for {{ video.youtube_channel.channel_name }}" />
-            <a href="{{ video.youtube_channel.channel_link }}">{{ video.youtube_channel.channel_name }}</a>
+                 alt="Channel icon for {{ video.youtube_channel.channel_name }}"
+                 style="border-radius: 9999px;
+                        width: 2rem" />
+            <a style="margin-left: 0.875rem;
+                      font-size: 0.875rem;
+                      line-height: 1.25rem;
+                      font-weight: 500;
+                      text-decoration-line: underline;
+                      color: rgb(168 85 247);
+                      hover: {color: rgb(147 51 234)}"
+               href="{{ video.youtube_channel.channel_link }}">{{ video.youtube_channel.channel_name }}</a>
           </div>
         </div>
       {% endfor %}
