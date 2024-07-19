@@ -7,7 +7,7 @@ license = "GNU General Public License Version 2"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "3.12.4"
 Django = "^5.0.6"
 django-environ = "^0.11.2"
 sentry-sdk = "^2.6.0"
@@ -16,6 +16,9 @@ coverage = "^7.5.4"
 selenium = "^4.22.0"
 apscheduler = "^3.10.4"
 django-apscheduler = "^0.6.2"
+psycopg2 = "^2.9.9"
+django-on-heroku = "^1.1.2"
+gunicorn = "^22.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.7.1"

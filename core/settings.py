@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 
+import django_on_heroku
 import environ
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -39,6 +40,7 @@ ENV = environ.Env(
     EMAIL_HOST_PASSWORD=(str, ""),
     DEFAULT_FROM_EMAIL=(str, ""),
     DOMAIN=(str, "127.0.0.1:8000"),
+    HEROKU=(bool, True),
 )
 
 
@@ -58,6 +60,8 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = ENV("DEFAULT_FROM_EMAIL")
 
 DOMAIN = ENV("DOMAIN")
+
+HEROKU = ENV("HEROKU")
 
 
 if not DEBUG and SENTRY_DSN:
@@ -121,12 +125,23 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if HEROKU:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "notifytube",
+            "USER": "postgres",
+            "HOST": "localhost",
+            "PORT": "5432",
+        },
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -178,3 +193,15 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+
+if HEROKU:
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_DOMAIN = DOMAIN
+
+    DISABLE_SERVER_SIDE_CURSORS = (
+        True  # required when using pgbouncer's pool_mode=transaction
+    )
+
+    django_on_heroku.settings(locals())
+    config = locals()
