@@ -1,0 +1,58 @@
+{
+  "name": "NotifyTube",
+  "repository": "https://github.com/aurora-dot/NotifyTube",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs.git"
+    },
+    {
+      "url": "https://github.com/moneymeets/python-poetry-buildpack.git"
+    },
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "DJANGO_SUPERUSER_USERNAME": {
+      "required": true
+    },
+    "DJANGO_SUPERUSER_EMAIL": {
+      "required": true
+    },
+    "DJANGO_SUPERUSER_PASSWORD": {
+      "required": true
+    },
+    "SECRET_KEY": {
+      "required": true
+    },
+    "HEROKU": {
+      "required": true
+    },
+    "POETRY_VERSION": {
+      "required": true
+    },
+    "EMAIL_HOST": {
+      "required": true
+    },
+    "EMAIL_HOST_USER": {
+      "required": true
+    },
+    "EMAIL_HOST_PASSWORD": {
+      "required": true
+    },
+    "DEFAULT_FROM_EMAIL": {
+      "required": true
+    }
+  }
+}
