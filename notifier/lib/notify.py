@@ -46,7 +46,7 @@ def notify_common(freq):
                     "query": query,
                     "new_videos": new_videos,
                     "subscription": subscription,
-                    "domain": settings.DOMAIN,
+                    "domain": settings.EMAIL_URL_BEGINNING,
                 },
             )
             send_mail(
