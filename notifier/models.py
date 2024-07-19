@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models  # nopycln: import
 
 
@@ -33,3 +35,29 @@ class YouTubeChannel(models.Model):
     channel_link = models.URLField(unique=True)
     channel_name = models.CharField(max_length=64)
     channel_img = models.URLField()
+
+
+class SubscriptionEmailFrequency(models.TextChoices):
+    HOURLY = "H", "Hourly"
+    DAILY = "D", "Daily"
+    WEEKLY = "W", "Weekly"
+
+
+class Email(models.Model):
+    email = models.EmailField()
+
+
+class Subscription(models.Model):
+    email = models.ForeignKey(
+        Email, related_name="subscriptions", on_delete=models.CASCADE
+    )
+    query = models.ForeignKey(
+        YouTubeQuery, related_name="subscriptions", on_delete=models.CASCADE
+    )
+    email_frequency = models.CharField(
+        max_length=2,
+        choices=SubscriptionEmailFrequency.choices,
+        default=SubscriptionEmailFrequency.DAILY,
+    )
+    last_sent = models.DateTimeField(auto_now=True)
+    slug = models.SlugField(default=uuid.uuid4(), editable=False, unique=True)
