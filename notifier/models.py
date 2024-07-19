@@ -60,4 +60,4 @@ class Subscription(models.Model):
         default=SubscriptionEmailFrequency.DAILY,
     )
     last_sent = models.DateTimeField(auto_now=True)
-    slug = models.SlugField(default=uuid.uuid4(), editable=False, unique=True)
+    slug = models.SlugField(default=uuid.uuid4, editable=False, unique=True)

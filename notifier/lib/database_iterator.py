@@ -45,7 +45,7 @@ def collect_new_videos():
         latest_video_ids = (
             models.YouTubeVideo.objects.filter(youtube_query=search_query)
             .order_by("-created_at")
-            .values_list("video_id", flat=True)[:5]
+            .values_list("video_id", flat=True)[:15]
         )
         try:
             LOGGER.info(

@@ -33,9 +33,11 @@ def notify_common(freq):
         email = subscription.email.email
         query = subscription.query
         last_sent = subscription.last_sent
-        new_videos = YouTubeVideo.objects.filter(
-            youtube_query=query, created_at__gt=last_sent
-        ).all()
+        new_videos = (
+            YouTubeVideo.objects.filter(youtube_query=query, created_at__gt=last_sent)
+            .order_by("-created_at")
+            .all()
+        )
         if len(new_videos) > 0:
             message = render_to_string(
                 "emails/template.html",
@@ -54,7 +56,7 @@ def notify_common(freq):
                 [email],
                 html_message=message,
             )
-            query.save()
+            subscription.save()
             LOGGER.info(
                 "Notifier - %s: Sent emails for query %s",
                 datetime.now(),
