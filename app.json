@@ -10,6 +10,9 @@
   "addons": [
     {
       "plan": "heroku-postgresql:mini"
+    },
+    {
+      "plan": "papertrail:choklad"
     }
   ],
   "buildpacks": [
@@ -42,9 +45,6 @@
     "HEROKU": {
       "required": true
     },
-    "POETRY_VERSION": {
-      "required": true
-    },
     "EMAIL_HOST": {
       "required": true
     },
@@ -55,6 +55,15 @@
       "required": true
     },
     "DEFAULT_FROM_EMAIL": {
+      "required": true
+    },
+    "SITENAME": {
+      "required": true
+    },
+    "EMAIL_URL_BEGINNING": {
+      "required": true
+    },
+    "SENTRY_DSN": {
       "required": true
     }
   }
