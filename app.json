@@ -10,6 +10,9 @@
   "addons": [
     {
       "plan": "heroku-postgresql:mini"
+    },
+    {
+      "plan": "papertrail:choklad"
     }
   ],
   "buildpacks": [
