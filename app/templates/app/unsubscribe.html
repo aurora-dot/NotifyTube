@@ -1,0 +1,19 @@
+{% extends "app/main.html" %}
+
+{% block additional_main_classes %}
+  flex
+{% endblock additional_main_classes %}
+{% block main %}
+  <form method="post"
+        class="flex-grow flex flex-col items-center justify-center align-middle space-y-8">
+    {% csrf_token %}
+    <p>
+      Are you sure you want to unsubscribe from updates from query: "<span class="text-purple-500">{{ object.query.query }}</span>"?
+    </p>
+    <input class="hidden" type="submit" value="Confirm">
+    <button type="submit"
+            class="rounded-md bg-red-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+      Unsubscribe
+    </button>
+  </form>
+{% endblock main %}

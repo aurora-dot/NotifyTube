@@ -33,11 +33,12 @@ def notify_common(freq):
                     "query": query,
                     "new_videos": new_videos,
                     "subscription": subscription,
+                    "domain": settings.DOMAIN,
                 },
             )
             send_mail(
                 f"New YouTube Videos for: {query.query}",
-                message,
+                f"{len(new_videos)} new videos found.",
                 settings.DEFAULT_FROM_EMAIL,
                 [email],
                 html_message=message,

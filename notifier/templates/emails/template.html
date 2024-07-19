@@ -32,6 +32,6 @@
         </div>
       {% endfor %}
     </div>
-    {% comment %} <a href="{% url "app:unsubscribe" subscription.slug %}">Unsubscribe</a> {% endcomment %}
+    <a href="http://{{ domain }}{% url "app:unsubscribe" subscription.slug %}">Unsubscribe</a>
   </body>
 </html>

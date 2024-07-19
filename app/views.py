@@ -6,7 +6,9 @@ from typing import Any
 
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.views.generic import FormView, ListView
+from django.urls import reverse_lazy
+from django.views.generic import FormView, ListView, TemplateView
+from django.views.generic.edit import DeleteView
 
 from app.forms import YouTubeEmailSubscription, YouTubeQueryForm
 from notifier.lib.database_iterator import add_new_search_query
@@ -71,3 +73,13 @@ class QueryView(ListView):
             .prefetch_related("youtube_query")
             .order_by("-created_at")
         )
+
+
+class UnsubscribeView(DeleteView):
+    model = Subscription
+    template_name = "app/unsubscribe.html"
+    success_url = reverse_lazy("app:unsubscribe_success")
+
+
+class UnsubscribeSuccessView(TemplateView):
+    template_name = "app/unsubscribe_success.html"
