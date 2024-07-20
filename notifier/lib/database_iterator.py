@@ -95,7 +95,7 @@ def collect_new_videos():
 def _save_data(collected_videos, search_query):
     videos = []
     LOGGER.info("Collector - %s: Saving data into db...", datetime.now())
-    for video in collected_videos:
+    for video in reversed(collected_videos):
         channel, _ = models.YouTubeChannel.objects.get_or_create(
             channel_link=video["channel"].pop("channel_link"), defaults=video["channel"]
         )
@@ -104,6 +104,7 @@ def _save_data(collected_videos, search_query):
                 **video["video"],
                 youtube_query=search_query,
                 youtube_channel=channel,
+                created_at=datetime.now(),
             )
         )
 
