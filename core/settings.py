@@ -202,9 +202,5 @@ if HEROKU:
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_DOMAIN = SITENAME
 
-    DISABLE_SERVER_SIDE_CURSORS = (
-        True  # required when using pgbouncer's pool_mode=transaction
-    )
-
     django_on_heroku.settings(locals())
     config = locals()
