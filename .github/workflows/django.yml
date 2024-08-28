@@ -57,8 +57,6 @@ jobs:
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Prepare Selenium
         uses: nanasess/setup-chromedriver@v2.2.2
-        with:
-          chromedriver-version: "126.0.6478.126"
       - name: Setup Display
         run: |
           export DISPLAY=:99
