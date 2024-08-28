@@ -21,6 +21,10 @@ async function search() {
   document.getElementById("div_query").classList.remove("hidden");
   document.getElementById("loading").classList.add("hidden");
 
+  if (body === null) {
+    document.getElementById("error").classList.remove("hidden");
+  }
+
   window.location.href = window.location.origin + body.redirect;
 }
 
@@ -60,5 +64,7 @@ async function api() {
 
   if (response.ok) {
     return await response.json();
+  } else {
+    return null;
   }
 }
