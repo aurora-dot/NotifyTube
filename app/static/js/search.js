@@ -14,6 +14,38 @@ async function search() {
   document.getElementById("div_query").classList.add("hidden");
   document.getElementById("loading").classList.remove("hidden");
 
+  switchLoadingText(0);
+
+  const body = await api();
+
+  document.getElementById("div_query").classList.remove("hidden");
+  document.getElementById("loading").classList.add("hidden");
+
+  window.location.href = window.location.origin + body.redirect;
+}
+
+loading_values = [
+  "Collecting for the first time...",
+  "Scraping from YouTube...",
+  "Adding to database...",
+  "Wrapping things up...",
+];
+
+async function switchLoadingText(iteration) {
+  document.getElementById("loading_text").textContent =
+    loading_values[iteration];
+
+  if (iteration < loading_values.length) {
+    setTimeout(function () {
+      iteration++;
+      switchLoadingText(iteration);
+    }, 4000);
+  } else {
+    document.getElementById("loading_text").textContent = loading_values[3];
+  }
+}
+
+async function api() {
   const response = await fetch(`/api/search/`, {
     method: "POST",
     headers: {
@@ -26,10 +58,7 @@ async function search() {
     redirect: "follow",
   });
 
-  let body = await response.json();
-
-  document.getElementById("div_query").classList.remove("hidden");
-  document.getElementById("loading").classList.add("hidden");
-
-  window.location.href = window.location.origin + body.redirect;
+  if (response.ok) {
+    return await response.json();
+  }
 }
