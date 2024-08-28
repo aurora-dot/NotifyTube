@@ -8,7 +8,7 @@ on:
 
 env:
   node-version: 21
-  python-version: 3.12
+  python-version: 3.12.4
 
 jobs:
   test:
