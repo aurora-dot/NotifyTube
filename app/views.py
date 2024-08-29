@@ -5,31 +5,18 @@ Views for app django application
 from typing import Any
 
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import FormView, ListView, TemplateView
+from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import DeleteView
 
 from app.forms import YouTubeEmailSubscription, YouTubeQueryForm
-from notifier.lib.database_iterator import add_new_search_query
 from notifier.models import Email, Subscription, YouTubeQuery, YouTubeVideo
 
 
 # Create your views here.
-class IndexView(FormView):
+class IndexView(TemplateView):
     template_name = "app/index.html"
-    form_class = YouTubeQueryForm
-
-    def post(self, request, *args, **kwargs):
-        if "query" in request.POST:
-            search_query = request.POST["query"]
-            if not YouTubeQuery.objects.filter(query=search_query).exists():
-                # this should be on a separate thread and redirect to a loading page
-                # which waits for it to finish getting first video
-                add_new_search_query(search_query)
-            return redirect("app:query", slug=search_query)
-        else:
-            return HttpResponse(status_code=400)
 
 
 class QueryView(ListView):
@@ -56,7 +43,7 @@ class QueryView(ListView):
                 self.get_context_data() | {"success": True},
             )
         else:
-            return HttpResponse(status_code=400)
+            return HttpResponse(status=400)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
